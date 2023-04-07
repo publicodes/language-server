@@ -20,9 +20,6 @@
 	"engines": {
 		"vscode": "^1.75.0"
 	},
-	"activationEvents": [
-		"onLanguage:publicodes"
-	],
 	"main": "./client/out/extension",
 	"contributes": {
 		"languages": [
