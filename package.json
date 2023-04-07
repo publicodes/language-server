@@ -1,26 +1,64 @@
 {
-	"name": "lsp-sample",
-	"description": "A language server example",
-	"author": "Microsoft Corporation",
+	"name": "publicodes-language-server",
+	"description": "Publicodes language server",
+	"author": "Emile Rolley <emile.rolley@tuta.io>",
 	"license": "MIT",
-	"version": "1.0.0",
+	"version": "0.1.0",
+	"publisher": "vscode",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Microsoft/vscode-extension-samples"
+		"url": "https://github.com/EmileRolley/publicodes-language-server.git"
 	},
-	"publisher": "vscode-samples",
 	"categories": [],
 	"keywords": [
-		"multi-root ready"
+		"publicodes",
+		"language server",
+		"vscode"
 	],
 	"engines": {
 		"vscode": "^1.75.0"
 	},
 	"activationEvents": [
-		"onLanguage:plaintext"
+		"onLanguage:publicodes"
 	],
 	"main": "./client/out/extension",
 	"contributes": {
+		"languages": [
+			{
+				"id": "publicodes",
+				"aliases": [
+					"Publicodes"
+				],
+				"extensions": [
+					".publi.yml",
+					".publicodes.yml",
+					".publi.yaml",
+					".publicodes.yaml",
+					".publi",
+					".publicodes"
+				],
+				"configuration": "./language-configuration.json",
+				"icon": {
+					"light": "./icons/publicodes-logo.png",
+					"dark": "./icons/publicodes-logo.png"
+				}
+			}
+		],
+		"grammars": [
+			{
+				"language": "publicodes",
+				"scopeName": "source.publicodes",
+				"path": "./syntaxes/publicodes.tmLanguage.json"
+			}
+		],
+		"configurationDefaults": {
+			"[publicodes]": {
+				"editor.insertSpaces": true,
+				"editor.tabSize": 2,
+				"editor.autoIndent": "advanced",
+				"diffEditor.ignoreTrimWhitespace": false
+			}
+		},
 		"configuration": {
 			"type": "object",
 			"title": "Example configuration",
