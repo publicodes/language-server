@@ -1,8 +1,8 @@
 {
-	"name": "lsp-sample-server",
-	"description": "Example implementation of a language server in node.",
-	"version": "1.0.0",
-	"author": "Microsoft Corporation",
+	"name": "publicodes-language-server",
+	"description": "Language server for Publicodes",
+	"version": "0.1.0",
+	"author": "Emile Rolley <emile.rolley@tuta.io>",
 	"license": "MIT",
 	"engines": {
 		"node": "*"

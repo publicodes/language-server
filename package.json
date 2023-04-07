@@ -1,10 +1,12 @@
 {
 	"name": "publicodes-language-server",
-	"description": "Publicodes language server",
+	"description": "Publicodes language toolkit",
+	"displayName": "Publicodes language",
+	"icon": "icons/publicodes-logo.png",
 	"author": "Emile Rolley <emile.rolley@tuta.io>",
 	"license": "MIT",
 	"version": "0.1.0",
-	"publisher": "vscode",
+	"publisher": "EmileRolley",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/EmileRolley/publicodes-language-server.git"
