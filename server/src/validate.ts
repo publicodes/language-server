@@ -1,83 +1,64 @@
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { LSContext } from "./context";
+import Engine, { isPublicodesError } from "publicodes";
+import { YAMLParseError, parse } from "yaml";
+import { DiagnosticSeverity } from "vscode-languageserver/node";
 
 export default async function validate(
   ctx: LSContext,
-  document: TextDocument
+  document?: TextDocument
 ): Promise<void> {
-  // In this simple example we get the settings for every validate run.
-  // const settings = await getDocumentSettings(document.uri);
-  // const rules = parse(document.getText());
-  // try {
-  //   publicodeEngine.set(document.uri, new Engine(rules));
-  // } catch (e: Error | any) {
-  //   connection.console.log(Object.keys(e.info).join(", "));
-  //   // const diagnostics = e?.errors.map((error: PublicodesError<any>) => {
-  //   //   return {
-  //   //     severity: DiagnosticSeverity.Error,
-  //   //     range: {
-  //   //       start: document.positionAt(e.index),
-  //   //       end: document.positionAt(e.index + e.range),
-  //   //     },
-  //   //     message: error.message,
-  //   //     source: "publicodes",
-  //   //   };
-  //   // });
-  //   // connection.sendDiagnostics({ uri: document.uri, diagnostics });
-  // }
-  // The validator creates diagnostics for all uppercase words length 2 and more
-  // const text = document.getText();
-  // const pattern = /\b[A-Z]{2,}\b/g;
-  // let m: RegExpExecArray | null;
-  //
-  // let problems = 0;
-  // const diagnostics: Diagnostic[] = [];
-  // while ((m = pattern.exec(text)) && problems < settings.maxNumberOfProblems) {
-  //   problems++;
-  //   const diagnostic: Diagnostic = {
-  //     severity: DiagnosticSeverity.Warning,
-  //     range: {
-  //       start: document.positionAt(m.index),
-  //       end: document.positionAt(m.index + m[0].length),
-  //     },
-  //     message: `${m[0]} is all uppercase.`,
-  //     source: "ex",
-  //   };
-  //   if (hasDiagnosticRelatedInformationCapability) {
-  //     diagnostic.relatedInformation = [
-  //       {
-  //         location: {
-  //           uri: document.uri,
-  //           range: Object.assign({}, diagnostic.range),
-  //         },
-  //         message: "Spelling matters",
-  //       },
-  //       {
-  //         location: {
-  //           uri: document.uri,
-  //           range: Object.assign({}, diagnostic.range),
-  //         },
-  //         message: "Particularly for names",
-  //       },
-  //     ];
-  //   }
-  //   diagnostics.push(diagnostic);
-  // }
-  //
-  // Send the computed diagnostics to VSCode.
+  if (document != undefined) {
+    try {
+      ctx.rawPublicodesRules = {
+        ...ctx.rawPublicodesRules,
+        ...parse(document.getText()),
+      };
+    } catch (e: YAMLParseError | any) {
+      const diagnostic = {
+        severity: DiagnosticSeverity.Error,
+        range: {
+          start: document.positionAt(e.pos[0]),
+          end: document.positionAt(e.pos[1]),
+        },
+        message: e.message,
+        source: "publicodes",
+      };
+      ctx.connection.sendDiagnostics({
+        uri: document.uri,
+        diagnostics: [diagnostic],
+      });
+    }
+  }
+  try {
+    ctx.connection.console.log(
+      `Parsing ${Object.keys(ctx.rawPublicodesRules).length} rules`
+    );
+    const engine = new Engine(ctx.rawPublicodesRules);
+    ctx.parsedRules = engine.getParsedRules();
+    ctx.connection.console.log(
+      `Parsed ${Object.keys(ctx.parsedRules).length} rules`
+    );
+    if (document != undefined) {
+      ctx.connection.sendDiagnostics({
+        uri: document.uri,
+        diagnostics: [],
+      });
+    }
+  } catch (e: any) {
+    if (document != undefined) {
+      const diagnostic = {
+        severity: DiagnosticSeverity.Error,
+        range: {
+          start: document.positionAt(0),
+          end: document.positionAt(1),
+        },
+        message: e.message,
+      };
+      ctx.connection.sendDiagnostics({
+        uri: document.uri,
+        diagnostics: [diagnostic],
+      });
+    }
+  }
 }
-
-// function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
-//   if (!hasConfigurationCapability) {
-//     return Promise.resolve(globalSettings);
-//   }
-//   let result = documentSettings.get(resource);
-//   if (!result) {
-//     result = connection.workspace.getConfiguration({
-//       scopeUri: resource,
-//       section: "publicodes-language-server",
-//     });
-//     documentSettings.set(resource, result);
-//   }
-//   return result;
-// }

@@ -54,9 +54,16 @@ ctx.documents.onDidClose((e) => {
   ctx.documentSettings.delete(e.document.uri);
 });
 
+// Only keep settings for open documents
+ctx.documents.onDidSave((e) => {
+  validate(ctx, e.document);
+});
+
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 ctx.documents.onDidChangeContent(onChangeHandler(ctx));
+
+// ctx.connection.onDidSaveTextDocument(onSaveHandler(ctx));
 
 ctx.connection.onDidChangeWatchedFiles((_change) => {
   // Monitored files have change in VSCode
