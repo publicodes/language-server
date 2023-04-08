@@ -18,10 +18,11 @@ export default function intializedHandler(ctx: LSContext) {
       ctx.connection.workspace.getWorkspaceFolders().then((folders) => {
         if (folders) {
           folders.forEach((folder) => {
-            const path = fileURLToPath(folder.uri);
-            ctx.connection.console.log(`Workspace folder: ${path}`);
-            ctx.rawPublicodesRules = getRawPublicodesRules(ctx, path);
+            ctx.rawPublicodesRules = getRawPublicodesRules(ctx, folder.uri);
           });
+          ctx.connection.console.log(
+            `Validating ${Object.keys(ctx.rawPublicodesRules).length} rules`
+          );
           validate(ctx);
         }
       });

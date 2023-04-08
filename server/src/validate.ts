@@ -2,32 +2,27 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { LSContext } from "./context";
 import Engine, { isPublicodesError } from "publicodes";
 import { YAMLParseError, parse } from "yaml";
-import { DiagnosticSeverity } from "vscode-languageserver/node";
+import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node";
+import parseYAML from "./parseYAML";
 
 export default async function validate(
   ctx: LSContext,
   document?: TextDocument
 ): Promise<void> {
+  let diagnostics: Diagnostic[] = [];
+
+  if (document == undefined && ctx.lastOpenedFile != undefined) {
+    document = ctx.documents.get(ctx.lastOpenedFile);
+  }
+
   if (document != undefined) {
-    try {
-      ctx.rawPublicodesRules = {
-        ...ctx.rawPublicodesRules,
-        ...parse(document.getText()),
-      };
-    } catch (e: YAMLParseError | any) {
-      const diagnostic = {
-        severity: DiagnosticSeverity.Error,
-        range: {
-          start: document.positionAt(e.pos[0]),
-          end: document.positionAt(e.pos[1]),
-        },
-        message: e.message,
-        source: "publicodes",
-      };
-      ctx.connection.sendDiagnostics({
-        uri: document.uri,
-        diagnostics: [diagnostic],
-      });
+    const { rules, error } = parseYAML(ctx, document);
+    ctx.rawPublicodesRules = {
+      ...ctx.rawPublicodesRules,
+      ...rules,
+    };
+    if (error != undefined) {
+      diagnostics.push(error);
     }
   }
   try {
@@ -37,28 +32,24 @@ export default async function validate(
     const engine = new Engine(ctx.rawPublicodesRules);
     ctx.parsedRules = engine.getParsedRules();
     ctx.connection.console.log(
-      `Parsed ${Object.keys(ctx.parsedRules).length} rules`
+      `Validate Parsed ${Object.keys(ctx.parsedRules).length} rules`
     );
-    if (document != undefined) {
-      ctx.connection.sendDiagnostics({
-        uri: document.uri,
-        diagnostics: [],
-      });
-    }
   } catch (e: any) {
     if (document != undefined) {
-      const diagnostic = {
+      diagnostics.push({
         severity: DiagnosticSeverity.Error,
         range: {
           start: document.positionAt(0),
           end: document.positionAt(1),
         },
         message: e.message,
-      };
-      ctx.connection.sendDiagnostics({
-        uri: document.uri,
-        diagnostics: [diagnostic],
       });
     }
+  }
+  if (document != undefined) {
+    ctx.connection.sendDiagnostics({
+      uri: document.uri,
+      diagnostics,
+    });
   }
 }

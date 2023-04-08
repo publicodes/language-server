@@ -24,4 +24,5 @@ export type LSContext = {
   rawPublicodesRules: Record<string, any>;
   parsedRules: Record<string, any>;
   dirsToIgnore: string[];
+  lastOpenedFile?: string;
 };

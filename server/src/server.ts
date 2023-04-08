@@ -37,6 +37,7 @@ let ctx: LSContext = {
   rawPublicodesRules: {},
   parsedRules: {},
   dirsToIgnore: ["node_modules", ".git", "i18n"],
+  lastOpenedFile: undefined,
 };
 
 ctx.connection.onInitialize((params: InitializeParams) => {
@@ -57,6 +58,10 @@ ctx.documents.onDidClose((e) => {
 // Only keep settings for open documents
 ctx.documents.onDidSave((e) => {
   validate(ctx, e.document);
+});
+
+ctx.documents.onDidOpen((e) => {
+  ctx.lastOpenedFile = e.document.uri;
 });
 
 // The content of a text document has changed. This event is emitted
