@@ -42,7 +42,7 @@
       }
     },
     {
-      "beforeText": "^\\s*\\w*\\:\\s*(\\||>)*\\s*$",
+      "beforeText": "^\\s*[A-zÀ-ú\\s]*\\:\\s*(\\||>)*\\s*$",
       "action": {
         "indent": "indent"
       }
@@ -51,7 +51,7 @@
       "beforeText": "^\\s*-\\s.*\\s*$",
       "action": {
         "indent": "none",
-        "appendText": "- "
+	        "appendText": "- "
       }
     }
   ]
