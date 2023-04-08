@@ -14,24 +14,11 @@ export function completionHandler(ctx: LSContext) {
   return (
     _textDocumentPosition: TextDocumentPositionParams
   ): CompletionItem[] => {
-    ctx.connection.console.log(`Completion requested`);
-    const items = Object.entries(ctx.parsedRules).map(([dottedName, rule]) => {
-      const { titre, description } = (rule as RuleNode).rawNode;
-      const labelDetails = {
-        detail: " [règle]",
-        description: titre,
-      };
-      return {
-        label: dottedName,
-        kind: CompletionItemKind.Function,
-        documentation: description,
-        labelDetails,
-        data: {
-          labelDetails,
-        },
-      };
-    });
-    return [...mechanismsCompletionItems, ...keywordsCompletionItems, ...items];
+    return [
+      ...mechanismsCompletionItems,
+      ...keywordsCompletionItems,
+      ...getRuleCompletionItems(ctx),
+    ];
   };
 }
 
@@ -52,6 +39,25 @@ export function completionResolveHandler(ctx: LSContext) {
     };
   };
 }
+
+const getRuleCompletionItems = (ctx: LSContext): CompletionItem[] => {
+  return Object.entries(ctx.parsedRules).map(([dottedName, rule]) => {
+    const { titre, description, icônes } = (rule as RuleNode).rawNode;
+    const labelDetails = {
+      detail: (icônes != undefined ? ` ${icônes}` : "") + " [règle]",
+      description: titre,
+    };
+    return {
+      label: dottedName,
+      kind: CompletionItemKind.Function,
+      documentation: description,
+      labelDetails,
+      data: {
+        labelDetails,
+      },
+    };
+  });
+};
 
 const mechanismsCompletionItems: CompletionItem[] = mechanisms.map((item) => {
   const labelDetails = {
