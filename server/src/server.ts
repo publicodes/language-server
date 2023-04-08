@@ -16,6 +16,7 @@ import initializedHandler from "./initialized";
 import { completionHandler, completionResolveHandler } from "./completion";
 import { changeConfigurationHandler } from "./configuration";
 import validate from "./validate";
+import { onChangeHandler } from "./onChange";
 
 let ctx: LSContext = {
   // Create a connection for the server, using Node's IPC as a transport.
@@ -55,9 +56,7 @@ ctx.documents.onDidClose((e) => {
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
-ctx.documents.onDidChangeContent((change) => {
-  validate(ctx, change.document);
-});
+ctx.documents.onDidChangeContent(onChangeHandler(ctx));
 
 ctx.connection.onDidChangeWatchedFiles((_change) => {
   // Monitored files have change in VSCode
