@@ -8,6 +8,7 @@ import {
 import { LSContext } from "./context";
 import { RuleNode } from "publicodes";
 import { mechanisms } from "./completion-items/mechanisms";
+import { keywords } from "./completion-items/keywords";
 
 export function completionHandler(ctx: LSContext) {
   return (
@@ -66,13 +67,6 @@ const mechanismsCompletionItems: CompletionItem[] = mechanisms.map((item) => {
     },
   };
 });
-
-const keywords: CompletionItem[] = [
-  {
-    label: "description",
-    documentation: "Description de la règle",
-  },
-];
 
 const keywordsCompletionItems: CompletionItem[] = keywords.map((item) => {
   const labelDetails = {
