@@ -15,6 +15,15 @@ export const defaultDocSettings: DocumentSettings = {
   maxNumberOfProblems: 1000,
 };
 
+export const defaultDirsToIgnore = [
+  "node_modules",
+  "i18n",
+  "test",
+  "source",
+  "scripts",
+  "personas",
+];
+
 export type LSContext = {
   connection: Connection;
   documents: TextDocuments<TextDocument>;

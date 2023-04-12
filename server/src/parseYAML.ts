@@ -16,7 +16,6 @@ export default function parseYAML(
   }
   try {
     const parsedRules = parse(text ?? document.getText());
-    ctx.connection.console.log(`document: ${document.uri}`);
     ctx.connection.console.log(
       `parseYAML Parsed ${Object.keys(parsedRules).length} rules`
     );

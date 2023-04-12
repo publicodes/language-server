@@ -10,7 +10,7 @@ import {
 } from "vscode-languageserver/node";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
-import { LSContext, defaultDocSettings } from "./context";
+import { LSContext, defaultDirsToIgnore, defaultDocSettings } from "./context";
 import initialize from "./initialize";
 import initializedHandler from "./initialized";
 import { completionHandler, completionResolveHandler } from "./completion";
@@ -36,7 +36,7 @@ let ctx: LSContext = {
   },
   rawPublicodesRules: {},
   parsedRules: {},
-  dirsToIgnore: ["node_modules", ".git", "i18n"],
+  dirsToIgnore: defaultDirsToIgnore,
   lastOpenedFile: undefined,
 };
 

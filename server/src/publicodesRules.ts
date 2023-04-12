@@ -18,17 +18,19 @@ export function getRawPublicodesRules(
   const files = readdirSync(path);
   // ctx.connection.console.log(`Files: ${files.join(",")}`);
   files?.forEach((file) => {
+    if (file.startsWith(".")) {
+      ctx.connection.console.log(`Ignoring ${file}`);
+      return;
+    }
     const filePath = join(path, file);
     // TODO: should be .publi.yaml instead of ignoring i18n/
     if (filePath.endsWith(".yaml")) {
+      ctx.connection.console.log(`Parsed ${filePath}:`);
       const { rules: parsedRules } = parseYAML(
         ctx,
         ctx.documents.get(uri),
         readFileSync(filePath).toString()
       );
-
-      ctx.connection.console.log(`Parsed ${filePath}:`);
-      ctx.connection.console.log(Object.keys(parsedRules).join(","));
 
       rules = {
         ...rules,
@@ -38,6 +40,7 @@ export function getRawPublicodesRules(
       statSync(filePath)?.isDirectory() &&
       !ctx.dirsToIgnore.includes(file)
     ) {
+      ctx.connection.console.log(`Recursing into ${file}`);
       rules = getRawPublicodesRules(ctx, `${uri}/${file}`, rules);
     }
   });
