@@ -26,6 +26,10 @@ export function getRawPublicodesRules(
         ctx.documents.get(uri),
         readFileSync(filePath).toString()
       );
+
+      ctx.connection.console.log(`Parsed ${filePath}:`);
+      ctx.connection.console.log(Object.keys(parsedRules).join(","));
+
       rules = {
         ...rules,
         ...parsedRules,
