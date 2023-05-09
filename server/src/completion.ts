@@ -9,22 +9,31 @@ import { LSContext } from "./context";
 import { RuleNode } from "publicodes";
 import { mechanisms } from "./completion-items/mechanisms";
 import { keywords } from "./completion-items/keywords";
+import { fileURLToPath } from "node:url";
 
 export function completionHandler(ctx: LSContext) {
   return (
-    _textDocumentPosition: TextDocumentPositionParams
+    textDocumentPosition: TextDocumentPositionParams
   ): CompletionItem[] => {
+    const { textDocument } = textDocumentPosition;
+    const currFileName = fileURLToPath(textDocument.uri)
+      .split("/")
+      .pop()
+      ?.slice(0, ".publi.yaml".length * -1);
+
+    ctx.connection.console.log(
+      `Completion request received: URI: ${currFileName}`
+    );
     return [
+      ...getRuleCompletionItems(ctx, currFileName),
       ...mechanismsCompletionItems,
       ...keywordsCompletionItems,
-      ...getRuleCompletionItems(ctx),
     ];
   };
 }
 
-export function completionResolveHandler(ctx: LSContext) {
+export function completionResolveHandler(_ctx: LSContext) {
   return (item: CompletionItem): CompletionItem => {
-    ctx.connection.console.log(`Completion ${item.labelDetails?.detail}`);
     if (!item.data) {
       return item;
     }
@@ -40,13 +49,22 @@ export function completionResolveHandler(ctx: LSContext) {
   };
 }
 
-const getRuleCompletionItems = (ctx: LSContext): CompletionItem[] => {
+const getRuleCompletionItems = (
+  ctx: LSContext,
+  currFileName?: string
+): CompletionItem[] => {
   return Object.entries(ctx.parsedRules).map(([dottedName, rule]) => {
     const { titre, description, icônes } = (rule as RuleNode).rawNode;
     const labelDetails = {
       detail: (icônes != undefined ? ` ${icônes}` : "") + " [règle]",
       description: titre,
     };
+
+    const insertText =
+      currFileName && dottedName.startsWith(currFileName)
+        ? // Remove the current file name from the insert text
+          dottedName.slice(currFileName.length + " . ".length)
+        : dottedName;
     return {
       label: dottedName,
       kind: CompletionItemKind.Function,
@@ -54,6 +72,7 @@ const getRuleCompletionItems = (ctx: LSContext): CompletionItem[] => {
       labelDetails,
       data: {
         labelDetails,
+        insertText,
       },
     };
   });
