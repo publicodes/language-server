@@ -1,9 +1,9 @@
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { LSContext } from "./context";
-import Engine, { isPublicodesError } from "publicodes";
-import { YAMLParseError, parse } from "yaml";
+import Engine from "publicodes";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node";
 import parseYAML from "./parseYAML";
+import { resolveImports } from "./resolveImports";
 
 export default async function validate(
   ctx: LSContext,
@@ -19,7 +19,7 @@ export default async function validate(
     const { rules, error } = parseYAML(ctx, document);
     ctx.rawPublicodesRules = {
       ...ctx.rawPublicodesRules,
-      ...rules,
+      ...resolveImports(rules, { verbose: false, ctx }),
     };
     if (error != undefined) {
       diagnostics.push(error);
