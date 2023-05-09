@@ -4,6 +4,9 @@ import { join } from "path";
 import { LSContext } from "./context";
 import parseYAML from "./parseYAML";
 import { fileURLToPath } from "node:url";
+import Engine, { RuleNode } from "publicodes";
+
+import { resolveImports } from "./resolveImports";
 
 // Explore recursively all files in the workspace folder
 // and concat all yaml files into one string for parsing
@@ -34,7 +37,7 @@ export function getRawPublicodesRules(
 
       rules = {
         ...rules,
-        ...parsedRules,
+        ...resolveImports(parsedRules, { verbose: true, ctx }),
       };
     } else if (
       statSync(filePath)?.isDirectory() &&
