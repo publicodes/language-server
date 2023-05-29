@@ -43,6 +43,8 @@ export type LSContext = {
   globalSettings: DocumentSettings;
   config: GlobalConfig;
   ruleToFileNameMap: Map<DottedName, FilePath>;
+  fileNameToRulesMap: Map<FilePath, DottedName[]>;
+  URIToRevalidate: Set<FilePath>;
   rawPublicodesRules: RawPublicodes;
   parsedRules: Record<string, any>;
   dirsToIgnore: string[];

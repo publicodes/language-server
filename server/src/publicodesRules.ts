@@ -7,6 +7,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { resolveImports } from "./resolveImports";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
+const PUBLICODES_FILE_EXTENSION = ".publicodes";
+
 export function parseRawPublicodesRulesFromDocument(
   ctx: LSContext,
   filePath: FilePath,
@@ -19,9 +21,22 @@ export function parseRawPublicodesRulesFromDocument(
   );
   const resolvedRules = resolveImports(rules, { verbose: true, ctx });
 
-  Object.keys(resolvedRules).forEach((rule) =>
-    ctx.ruleToFileNameMap.set(rule, filePath)
-  );
+  const ruleNames = Object.keys(resolvedRules);
+
+  // Manage removed rules
+  if (ctx.fileNameToRulesMap.has(filePath)) {
+    ctx.fileNameToRulesMap
+      .get(filePath)
+      ?.filter((rule) => !ruleNames.includes(rule))
+      ?.forEach((rule) => {
+        ctx.ruleToFileNameMap.delete(rule);
+        delete resolvedRules[rule];
+        delete ctx.rawPublicodesRules[rule];
+      });
+  }
+
+  ctx.fileNameToRulesMap.set(filePath, ruleNames);
+  ruleNames.forEach((rule) => ctx.ruleToFileNameMap.set(rule, filePath));
   ctx.rawPublicodesRules = {
     ...ctx.rawPublicodesRules,
     ...resolvedRules,
@@ -47,16 +62,13 @@ export function parseRawPublicodesRules(
 ): LSContext {
   const path = fileURLToPath(uri);
   const files = readdirSync(path);
-  // ctx.connection.console.log(`Files: ${files.join(",")}`);
   files?.forEach((file) => {
     if (file.startsWith(".")) {
-      // ctx.connection.console.log(`Ignoring ${file}`);
       return;
     }
     const filePath = join(path, file);
     // TODO: should be .publi.yaml instead of ignoring i18n/
-    if (filePath.endsWith(".yaml")) {
-      // ctx.connection.console.log(`Parsed ${filePath}:`);
+    if (filePath.endsWith(PUBLICODES_FILE_EXTENSION)) {
       ctx = parseRawPublicodesRulesFromDocument(
         ctx,
         filePath,
@@ -66,7 +78,6 @@ export function parseRawPublicodesRules(
       statSync(filePath)?.isDirectory() &&
       !ctx.dirsToIgnore.includes(file)
     ) {
-      // ctx.connection.console.log(`Recursing into ${file}`);
       ctx = parseRawPublicodesRules(ctx, `${uri}/${file}`);
     }
   });

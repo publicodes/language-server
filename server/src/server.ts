@@ -35,6 +35,8 @@ let ctx: LSContext = {
     hasDiagnosticRelatedInformationCapability: false,
   },
   ruleToFileNameMap: new Map(),
+  fileNameToRulesMap: new Map(),
+  URIToRevalidate: new Set(),
   rawPublicodesRules: {},
   parsedRules: {},
   dirsToIgnore: defaultDirsToIgnore,
