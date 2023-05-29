@@ -16,6 +16,8 @@
 
 </div>
 
+https://github.com/EmileRolley/publicodes-language-server/assets/44124798/2274c403-2007-4688-8ebd-faf5e80f6bb4
+
 A language server for [Publicodes](https://publi.codes/) providing basic features:
 - Completions based on current project rules and publicodes's mechanisms
 - Diagnostics generated on each save
