@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import Engine from "publicodes";
 
 const IMPORT_KEYWORD = "importer!";
@@ -8,8 +8,18 @@ const FROM_KEYWORD = "depuis";
 const RULES_KEYWORD = "les règles";
 
 const packageModelPath = (packageName, { ctx }) => {
-  return `${ctx.rootFolderPath}/node_modules/${packageName}/${packageName}.model.json`;
+  const modelFilePath = `${packageName}/${packageName}.model.json`;
+
+  for (const nodeModulesPath of ctx.nodeModulesPaths) {
+    const path = `${nodeModulesPath}/${modelFilePath}`;
+    if (existsSync(path)) {
+      return path;
+    }
+  }
+
+  return `${ctx.workspaceRoot}/node_modules/${modelFilePath}`;
 };
+
 // Stores engines initialized with the rules from package
 const enginesCache = {};
 

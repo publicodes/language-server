@@ -3,6 +3,8 @@ import { LSContext } from "./context";
 import { fileURLToPath } from "node:url";
 import { getRawPublicodesRules } from "./publicodesRules";
 import validate from "./validate";
+import { existsSync, statSync } from "fs";
+import { readdirSync } from "node:fs";
 
 export default function intializedHandler(ctx: LSContext) {
   return () => {
@@ -18,6 +20,17 @@ export default function intializedHandler(ctx: LSContext) {
         if (folders) {
           if (!ctx.rootFolderPath) {
             ctx.rootFolderPath = fileURLToPath(folders[0].uri);
+            // NOTE(@EmileRolley): little hack to manage monorepos
+            ctx.nodeModulesPaths = [];
+            readdirSync(ctx.rootFolderPath).forEach((file) => {
+              const path = `${ctx.rootFolderPath}/${file}`;
+              if (!file.startsWith(".") && statSync(path)?.isDirectory()) {
+                const nodeModulesPath = `${path}/node_modules`;
+                if (existsSync(nodeModulesPath)) {
+                  ctx.nodeModulesPaths?.push(nodeModulesPath);
+                }
+              }
+            });
           }
           folders.forEach((folder) => {
             ctx.rawPublicodesRules = getRawPublicodesRules(ctx, folder.uri);

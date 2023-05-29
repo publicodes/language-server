@@ -27,6 +27,7 @@ export const defaultDirsToIgnore = [
 export type LSContext = {
   connection: Connection;
   rootFolderPath?: string;
+  nodeModulesPaths?: string[];
   documents: TextDocuments<TextDocument>;
   documentSettings: Map<string, Thenable<DocumentSettings>>;
   globalSettings: DocumentSettings;
