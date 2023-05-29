@@ -1,5 +1,9 @@
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { Connection, TextDocuments } from "vscode-languageserver/node";
+import {
+  Connection,
+  Diagnostic,
+  TextDocuments,
+} from "vscode-languageserver/node";
 
 export type GlobalConfig = {
   hasConfigurationCapability: boolean;
@@ -24,6 +28,12 @@ export const defaultDirsToIgnore = [
   "personas",
 ];
 
+export type FilePath = string;
+
+export type DottedName = string;
+
+export type RawPublicodes = Record<DottedName, any>;
+
 export type LSContext = {
   connection: Connection;
   rootFolderPath?: string;
@@ -32,7 +42,8 @@ export type LSContext = {
   documentSettings: Map<string, Thenable<DocumentSettings>>;
   globalSettings: DocumentSettings;
   config: GlobalConfig;
-  rawPublicodesRules: Record<string, any>;
+  ruleToFileNameMap: Map<DottedName, FilePath>;
+  rawPublicodesRules: RawPublicodes;
   parsedRules: Record<string, any>;
   dirsToIgnore: string[];
   lastOpenedFile?: string;

@@ -1,7 +1,7 @@
 import { DidChangeConfigurationNotification } from "vscode-languageserver/node";
 import { LSContext } from "./context";
 import { fileURLToPath } from "node:url";
-import { getRawPublicodesRules } from "./publicodesRules";
+import { parseRawPublicodesRules } from "./publicodesRules";
 import validate from "./validate";
 import { existsSync, statSync } from "fs";
 import { readdirSync } from "node:fs";
@@ -33,7 +33,7 @@ export default function intializedHandler(ctx: LSContext) {
             });
           }
           folders.forEach((folder) => {
-            ctx.rawPublicodesRules = getRawPublicodesRules(ctx, folder.uri);
+            ctx = parseRawPublicodesRules(ctx, folder.uri);
           });
           ctx.connection.console.log(
             `Validating ${Object.keys(ctx.rawPublicodesRules).length} rules`

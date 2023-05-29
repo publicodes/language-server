@@ -34,6 +34,7 @@ let ctx: LSContext = {
     hasWorkspaceFolderCapability: false,
     hasDiagnosticRelatedInformationCapability: false,
   },
+  ruleToFileNameMap: new Map(),
   rawPublicodesRules: {},
   parsedRules: {},
   dirsToIgnore: defaultDirsToIgnore,
