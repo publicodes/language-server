@@ -67,8 +67,11 @@ export function parseRawPublicodesRules(
       return;
     }
     const filePath = join(path, file);
-    // TODO: should be .publi.yaml instead of ignoring i18n/
-    if (filePath.endsWith(PUBLICODES_FILE_EXTENSION)) {
+    if (
+      filePath.endsWith(PUBLICODES_FILE_EXTENSION) ||
+      // TODO: should be all allowed extensions, temporary fix to test
+      filePath.endsWith(".yaml")
+    ) {
       ctx = parseRawPublicodesRulesFromDocument(
         ctx,
         filePath,
