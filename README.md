@@ -3,7 +3,7 @@
 	<big>Publicodes language server</big>
   </h3>
   <p align="center">
-   <a href="https://github.com/EmileRolley/publicodes-language-server/issues">Report Bug</a>
+   <a href="https://github.com/publicodes/language-server/issues">Report Bug</a>
    •
    <a href="https://publi.codes">Publicodes</a>
    •
