@@ -12,7 +12,7 @@
   </p>
 
  :warning: <i>The project is in WIP and the server has only been tested with VSCode and the
-[nosgestesclimat](https://github.com/datagir/nosgestesclimat) model.</i> :warning:
+[nosgestesclimat](https://github.com/incubateur-ademe/nosgestesclimat) model.</i> :warning:
 
 </div>
 
