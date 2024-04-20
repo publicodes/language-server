@@ -1,7 +1,7 @@
 import { DidChangeConfigurationNotification } from "vscode-languageserver/node";
 import { LSContext } from "./context";
 import { fileURLToPath } from "node:url";
-import { parseRawPublicodesRules } from "./publicodesRules";
+import { parseDir } from "./publicodesRules";
 import validate from "./validate";
 import { existsSync, statSync } from "fs";
 import { readdirSync } from "node:fs";
@@ -12,7 +12,7 @@ export default function intializedHandler(ctx: LSContext) {
       // Register for all configuration changes.
       ctx.connection.client.register(
         DidChangeConfigurationNotification.type,
-        undefined
+        undefined,
       );
     }
     if (ctx.config.hasWorkspaceFolderCapability) {
@@ -33,10 +33,10 @@ export default function intializedHandler(ctx: LSContext) {
             });
           }
           folders.forEach((folder) => {
-            ctx = parseRawPublicodesRules(ctx, folder.uri);
+            parseDir(ctx, folder.uri);
           });
           ctx.connection.console.log(
-            `Validating ${Object.keys(ctx.rawPublicodesRules).length} rules`
+            `Validating ${Object.keys(ctx.rawPublicodesRules).length} rules`,
           );
           validate(ctx);
         }

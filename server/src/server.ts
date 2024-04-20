@@ -34,6 +34,8 @@ let ctx: LSContext = {
     hasWorkspaceFolderCapability: false,
     hasDiagnosticRelatedInformationCapability: false,
   },
+  fileInfos: new Map(),
+  diagnostics: [],
   ruleToFileNameMap: new Map(),
   fileNameToRulesMap: new Map(),
   URIToRevalidate: new Set(),
