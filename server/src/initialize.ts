@@ -2,7 +2,7 @@ import {
   InitializeParams,
   InitializeResult,
   TextDocumentSyncKind,
-} from "vscode-languageserver/node";
+} from "vscode-languageserver/node.js";
 import { GlobalConfig } from "./context";
 
 export default function initialize(params: InitializeParams): {

@@ -4,7 +4,7 @@ import {
   MarkupContent,
   MarkupKind,
   TextDocumentPositionParams,
-} from "vscode-languageserver/node";
+} from "vscode-languageserver/node.js";
 import { LSContext } from "./context";
 import { RuleNode } from "publicodes";
 import { mechanisms } from "./completion-items/mechanisms";

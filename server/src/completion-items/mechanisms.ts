@@ -1,4 +1,4 @@
-import { CompletionItem } from "vscode-languageserver/node";
+import { CompletionItem } from "vscode-languageserver/node.js";
 
 // TODO: auto-generate this from https://raw.githubusercontent.com/betagouv/publicodes/master/website/docs/api/m%C3%A9canismes.mdx
 export const mechanisms: CompletionItem[] = [

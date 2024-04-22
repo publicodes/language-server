@@ -1,7 +1,7 @@
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { LSContext } from "./context";
 import Engine from "publicodes";
-import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node";
+import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node.js";
 import { parseDocument } from "./publicodesRules";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -19,8 +19,9 @@ export default async function validate(
   // if not already opened in the editor
   documentURI?: string,
 ): Promise<void> {
-  let diagnostics: Diagnostic[] = [];
   let errorURI: string | undefined;
+
+  ctx.diagnostics = [];
 
   if (document == undefined && ctx.lastOpenedFile != undefined) {
     if (documentURI !== undefined) {
@@ -44,12 +45,12 @@ export default async function validate(
 
   try {
     ctx.connection.console.log(
-      `Parsing ${Object.keys(ctx.rawPublicodesRules).length} rules`,
+      `[validate] Parsing ${Object.keys(ctx.rawPublicodesRules).length} rules`,
     );
     const engine = new Engine(ctx.rawPublicodesRules);
     ctx.parsedRules = engine.getParsedRules();
     ctx.connection.console.log(
-      `Validate Parsed ${Object.keys(ctx.parsedRules).length} rules`,
+      `[validate] Parsed ${Object.keys(ctx.parsedRules).length} rules`,
     );
     // Remove previous diagnostics
     ctx.URIToRevalidate.delete(document.uri);
@@ -66,7 +67,7 @@ export default async function validate(
         ? pathToFileURL(ctx.ruleToFileNameMap.get(wrongRule) ?? document.uri)
             .href
         : document.uri;
-    diagnostics.push({
+    ctx.diagnostics.push({
       severity: DiagnosticSeverity.Error,
       range: {
         start: document.positionAt(0),
@@ -77,15 +78,15 @@ export default async function validate(
   }
 
   errorURI = errorURI ?? document.uri;
-  if (diagnostics.length > 0) {
+  if (ctx.diagnostics.length > 0) {
     ctx.URIToRevalidate.add(errorURI);
   }
   console.log(
-    `[validate] Sending ${diagnostics.length} diagnostics to:`,
+    `[validate] Sending ${ctx.diagnostics.length} diagnostics to:`,
     errorURI,
   );
   ctx.connection.sendDiagnostics({
     uri: errorURI,
-    diagnostics,
+    diagnostics: ctx.diagnostics,
   });
 }

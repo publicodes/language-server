@@ -3,7 +3,7 @@ import {
   Connection,
   Diagnostic,
   TextDocuments,
-} from "vscode-languageserver/node";
+} from "vscode-languageserver/node.js";
 import * as TSParser from "tree-sitter";
 
 export type GlobalConfig = {

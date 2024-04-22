@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "author": "Emile Rolley <emile.rolley@tuta.io>",
   "license": "MIT",
+  "type": "module",
   "engines": {
     "node": "*"
   },
@@ -18,8 +19,8 @@
     "publicodes": "^1.2.0",
     "tree-sitter": "^0.21.1",
     "tree-sitter-publicodes": "file:../../tree-sitter-publicodes",
-    "vscode-languageserver": "^8.1.0",
-    "vscode-languageserver-textdocument": "^1.0.8",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11",
     "yaml": "^2.2.1"
   },
   "scripts": {},

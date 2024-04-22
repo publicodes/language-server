@@ -1,16 +1,13 @@
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join } from "path";
-import { FilePath, LSContext, RawPublicodes, RuleDef } from "./context";
-import parseYAML from "./parseYAML";
 import { fileURLToPath, pathToFileURL } from "node:url";
-
-import { resolveImports } from "./resolveImports";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import TSParser from "tree-sitter";
+import Publicodes from "tree-sitter-publicodes";
+import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node.js";
+import { getModelFromSource } from "@publicodes/tools/compilation";
 
-import * as TSParser from "tree-sitter";
-import * as Publicodes from "tree-sitter-publicodes";
-import { readFile } from "fs/promises";
-import { Diagnostic } from "vscode-languageserver/node";
+import { FilePath, LSContext, RawPublicodes, RuleDef } from "./context";
 
 const PUBLICODES_FILE_EXTENSION = ".publicodes";
 
@@ -58,8 +55,11 @@ export function parseDocument(
   const fileContent = readFileSync(filePath).toString();
   const currentFileInfos = ctx.fileInfos.get(filePath);
   const tsTree = parser.parse(fileContent, currentFileInfos?.tsTree);
+  const { rawRules, error } = parseRawRules(filePath, document);
 
-  const { rawRules, error } = parseRawRules(ctx, filePath, document);
+  ctx.connection.console.log(
+    "[parseDocument] parsed " + JSON.stringify(rawRules, null, 2),
+  );
 
   ctx.fileInfos.set(filePath, {
     ruleDefs: collectRuleDefs(tsTree),
@@ -76,23 +76,28 @@ export function parseDocument(
  * Parse and resolve imports of a publicodes file
  */
 function parseRawRules(
-  ctx: LSContext,
   filePath: FilePath,
   document?: TextDocument,
 ): { rawRules: RawPublicodes; error?: Diagnostic | undefined } {
-  const { rules, error } = parseYAML(
-    ctx,
-    document,
-    readFileSync(filePath).toString(),
-  );
-
-  if (error) {
-    return { rawRules: {}, error: error };
+  try {
+    const resolvedRules = getModelFromSource(filePath);
+    return { rawRules: resolvedRules };
+  } catch (e: any) {
+    return {
+      rawRules: {},
+      error: {
+        severity: DiagnosticSeverity.Error,
+        range: {
+          // TODO: use the tree-sitter CST to get the position of the
+          // import statement
+          start: { line: 0, character: 0 },
+          end: { line: 0, character: "importer!".length },
+        },
+        message: e.message,
+        source: "publicodes",
+      },
+    };
   }
-
-  const resolvedRules = resolveImports(rules, { verbose: true, ctx });
-
-  return { rawRules: resolvedRules };
 }
 
 /**

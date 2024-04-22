@@ -1,4 +1,4 @@
-import { DidChangeConfigurationNotification } from "vscode-languageserver/node";
+import { DidChangeConfigurationNotification } from "vscode-languageserver/node.js";
 import { LSContext } from "./context";
 import { fileURLToPath } from "node:url";
 import { parseDir } from "./publicodesRules";
@@ -35,9 +35,6 @@ export default function intializedHandler(ctx: LSContext) {
           folders.forEach((folder) => {
             parseDir(ctx, folder.uri);
           });
-          ctx.connection.console.log(
-            `Validating ${Object.keys(ctx.rawPublicodesRules).length} rules`,
-          );
           validate(ctx);
         }
       });

@@ -1,5 +1,5 @@
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node";
+import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node.js";
 import { YAMLParseError, parse } from "yaml";
 import { LSContext } from "./context";
 

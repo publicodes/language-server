@@ -1,4 +1,4 @@
-import { CompletionItem } from "vscode-languageserver/node";
+import { CompletionItem } from "vscode-languageserver/node.js";
 
 // Keywords extracted from: https://github.com/betagouv/publicodes/blob/82a31f7e70837a02628cb1b758b87128819e8bff/packages/core/source/rule.ts#L18-L42
 export const keywords: CompletionItem[] = [

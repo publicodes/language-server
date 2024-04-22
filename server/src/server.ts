@@ -7,7 +7,7 @@ import {
   TextDocuments,
   ProposedFeatures,
   InitializeParams,
-} from "vscode-languageserver/node";
+} from "vscode-languageserver/node.js";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
 import { LSContext, defaultDirsToIgnore, defaultDocSettings } from "./context";
