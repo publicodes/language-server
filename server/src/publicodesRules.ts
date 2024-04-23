@@ -55,11 +55,7 @@ export function parseDocument(
   const fileContent = readFileSync(filePath).toString();
   const currentFileInfos = ctx.fileInfos.get(filePath);
   const tsTree = parser.parse(fileContent, currentFileInfos?.tsTree);
-  const { rawRules, error } = parseRawRules(filePath, document);
-
-  ctx.connection.console.log(
-    "[parseDocument] parsed " + JSON.stringify(rawRules, null, 2),
-  );
+  const { rawRules, error } = parseRawRules(filePath);
 
   ctx.fileInfos.set(filePath, {
     ruleDefs: collectRuleDefs(tsTree),
@@ -75,14 +71,40 @@ export function parseDocument(
 /**
  * Parse and resolve imports of a publicodes file
  */
-function parseRawRules(
-  filePath: FilePath,
-  document?: TextDocument,
-): { rawRules: RawPublicodes; error?: Diagnostic | undefined } {
+function parseRawRules(filePath: FilePath): {
+  rawRules: RawPublicodes;
+  error?: Diagnostic | undefined;
+} {
   try {
     const resolvedRules = getModelFromSource(filePath);
     return { rawRules: resolvedRules };
   } catch (e: any) {
+    if (e instanceof Error && e.message.startsWith("Map keys must be unique")) {
+      const match = e.message.match(
+        /^Map keys must be unique at line (\d+), column (\d+)/,
+      );
+      const line = Number(match?.[1]) - 1 ?? 0;
+      const column = Number(match?.[2]) - 1 ?? 0;
+      const name = e.message.match(/(\n.*)*\n(.+):/)?.[2] ?? "";
+
+      return {
+        rawRules: {},
+        error: {
+          severity: DiagnosticSeverity.Error,
+          range: {
+            start: { line, character: column },
+            end: { line, character: column + name.length },
+          },
+          message: `[Erreur de syntaxe]
+La règle '${name}' est définie plusieurs fois dans le fichier.
+
+[Solutions]
+- Renommez une des définitions de la règle '${name}'.
+- Supprimez une des définitions de la règle '${name}'.
+`,
+        },
+      };
+    }
     return {
       rawRules: {},
       error: {
