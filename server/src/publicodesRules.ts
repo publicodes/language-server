@@ -56,11 +56,17 @@ export function parseDocument(
   const currentFileInfos = ctx.fileInfos.get(filePath);
   const tsTree = parser.parse(fileContent, currentFileInfos?.tsTree);
   const { rawRules, errors } = parseRawRules(filePath);
+  const ruleDefs = collectRuleDefs(tsTree);
 
   ctx.fileInfos.set(filePath, {
-    ruleDefs: collectRuleDefs(tsTree),
-    rawRules: rawRules,
+    // NOTE: not needed for now (we use the parsedRules from the engine)
+    ruleDefs,
+    rawRules,
     tsTree,
+  });
+
+  ruleDefs.forEach((ruleDef) => {
+    ctx.ruleToFileNameMap.set(ruleDef.name, filePath);
   });
 
   if (errors) {

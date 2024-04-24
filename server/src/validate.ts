@@ -44,6 +44,15 @@ export default async function validate(
   parseDocument(ctx, docFilePath, document);
 
   try {
+    // Merge all raw rules (from all files) into one object
+    // NOTE: a better way could be found?
+    ctx.fileInfos.forEach((fileInfo) => {
+      ctx.rawPublicodesRules = {
+        ...ctx.rawPublicodesRules,
+        ...fileInfo.rawRules,
+      };
+    });
+
     ctx.connection.console.log(
       `[validate] Parsing ${Object.keys(ctx.rawPublicodesRules).length} rules`,
     );
@@ -62,16 +71,22 @@ export default async function validate(
     }
   } catch (e: any) {
     const wrongRule = getPublicodeRuleFileNameFromError(e);
+    const filePath = ctx.ruleToFileNameMap.get(wrongRule);
     errorURI =
       wrongRule !== undefined
         ? pathToFileURL(ctx.ruleToFileNameMap.get(wrongRule) ?? document.uri)
             .href
         : document.uri;
+
+    const pos = ctx.fileInfos
+      .get(filePath)
+      ?.ruleDefs.find(({ name }) => name === wrongRule)?.pos;
+
     ctx.diagnostics.push({
       severity: DiagnosticSeverity.Error,
       range: {
-        start: document.positionAt(0),
-        end: document.positionAt(1),
+        start: { line: pos.start.row, character: pos.start.column },
+        end: { line: pos.end.row, character: pos.end.column },
       },
       message: e.message,
     });
@@ -79,6 +94,7 @@ export default async function validate(
 
   errorURI = errorURI ?? document.uri;
   if (ctx.diagnostics.length > 0) {
+    // TODO: what needed for?
     ctx.URIToRevalidate.add(errorURI);
   }
   console.log(

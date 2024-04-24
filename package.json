@@ -24,7 +24,7 @@
   "scripts": {
     "vscode:prepublish": "compile",
     "compile": "tsc -b && tsc-alias -p server/tsconfig.json",
-    "watch": "concurrently \"tsc -b -w\" \"tsc-alias -p server/tsconfig.json -w\"",
+    "dev": "concurrently \"tsc -b -w\" \"tsc-alias -p server/tsconfig.json -w\"",
     "lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
     "postinstall": "yarn install --cwd client && yarn install --cwd server",
     "test": "sh ./scripts/e2e.sh"
@@ -63,7 +63,12 @@
         "editor.insertSpaces": true,
         "editor.tabSize": 2,
         "editor.autoIndent": "advanced",
-        "diffEditor.ignoreTrimWhitespace": false
+        "diffEditor.ignoreTrimWhitespace": false,
+        "editor.quickSuggestions": {
+          "other": true,
+          "comments": true,
+          "strings": true
+        }
       }
     },
     "configuration": {

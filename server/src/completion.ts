@@ -13,16 +13,16 @@ import { fileURLToPath } from "node:url";
 
 export function completionHandler(ctx: LSContext) {
   return (
-    textDocumentPosition: TextDocumentPositionParams
+    textDocumentPosition: TextDocumentPositionParams,
   ): CompletionItem[] => {
     const { textDocument } = textDocumentPosition;
     const currFileName = fileURLToPath(textDocument.uri)
       .split("/")
       .pop()
-      ?.slice(0, ".publi.yaml".length * -1);
+      ?.slice(0, ".publicodes".length * -1);
 
     ctx.connection.console.log(
-      `Completion request received: URI: ${currFileName}`
+      `Completion request received: URI: ${currFileName}`,
     );
     return [
       ...getRuleCompletionItems(ctx, currFileName),
@@ -51,10 +51,11 @@ export function completionResolveHandler(_ctx: LSContext) {
 
 const getRuleCompletionItems = (
   ctx: LSContext,
-  currFileName?: string
+  currFileName?: string,
 ): CompletionItem[] => {
   return Object.entries(ctx.parsedRules).map(([dottedName, rule]) => {
     const { titre, description, icônes } = (rule as RuleNode).rawNode;
+
     const labelDetails = {
       detail: (icônes != undefined ? ` ${icônes}` : "") + " [règle]",
       description: titre,

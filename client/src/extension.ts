@@ -18,7 +18,7 @@ let client: LanguageClient;
 export function activate(context: ExtensionContext) {
   // The server is implemented in node
   const serverModule = context.asAbsolutePath(
-    path.join("server", "out", "server.js")
+    path.join("server", "out", "server.js"),
   );
 
   // If the extension is launched in debug mode then the debug server options are used
@@ -39,6 +39,9 @@ export function activate(context: ExtensionContext) {
       // Notify the server about file changes to '.clientrc files contained in the workspace
       fileEvents: workspace.createFileSystemWatcher("**/.clientrc"),
     },
+    markdown: {
+      isTrusted: true,
+    },
   };
 
   // Create the language client and start the client.
@@ -46,7 +49,7 @@ export function activate(context: ExtensionContext) {
     "publicodes-language-server",
     "Publicodes Language Server",
     serverOptions,
-    clientOptions
+    clientOptions,
   );
 
   // Start the client. This will also launch the server

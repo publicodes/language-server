@@ -26,12 +26,17 @@ export default function initialize(params: InitializeParams): {
   );
 
   const initResult: InitializeResult = {
+    // Defines the capabilities provided by the server
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
+
       // Tell the client that this server supports code completion.
       completionProvider: {
         resolveProvider: true,
       },
+
+      // TODO: enable providers
+      hoverProvider: false,
     },
   };
   if (hasWorkspaceFolderCapability) {
