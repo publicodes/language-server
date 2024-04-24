@@ -55,7 +55,7 @@ export function parseDocument(
   const fileContent = readFileSync(filePath).toString();
   const currentFileInfos = ctx.fileInfos.get(filePath);
   const tsTree = parser.parse(fileContent, currentFileInfos?.tsTree);
-  const { rawRules, error } = parseRawRules(filePath);
+  const { rawRules, errors } = parseRawRules(filePath);
 
   ctx.fileInfos.set(filePath, {
     ruleDefs: collectRuleDefs(tsTree),
@@ -63,8 +63,8 @@ export function parseDocument(
     tsTree,
   });
 
-  if (error) {
-    ctx.diagnostics.push(error);
+  if (errors) {
+    ctx.diagnostics.push(...errors);
   }
 }
 
@@ -73,23 +73,23 @@ export function parseDocument(
  */
 function parseRawRules(filePath: FilePath): {
   rawRules: RawPublicodes;
-  error?: Diagnostic | undefined;
+  errors?: Diagnostic[] | undefined;
 } {
+  const errors: Diagnostic[] = [];
   try {
     const resolvedRules = getModelFromSource(filePath);
     return { rawRules: resolvedRules };
   } catch (e: any) {
-    if (e instanceof Error && e.message.startsWith("Map keys must be unique")) {
-      const match = e.message.match(
-        /^Map keys must be unique at line (\d+), column (\d+)/,
-      );
-      const line = Number(match?.[1]) - 1 ?? 0;
-      const column = Number(match?.[2]) - 1 ?? 0;
-      const name = e.message.match(/(\n.*)*\n(.+):/)?.[2] ?? "";
+    if (e instanceof Error) {
+      if (e.message.startsWith("Map keys must be unique")) {
+        const match = e.message.match(
+          /^Map keys must be unique at line (\d+), column (\d+)/,
+        );
+        const line = Number(match?.[1]) - 1 ?? 0;
+        const column = Number(match?.[2]) - 1 ?? 0;
+        const name = e.message.match(/(\n.*)*\n(.+):/)?.[2] ?? "";
 
-      return {
-        rawRules: {},
-        error: {
+        errors.push({
           severity: DiagnosticSeverity.Error,
           range: {
             start: { line, character: column },
@@ -102,12 +102,37 @@ La règle '${name}' est définie plusieurs fois dans le fichier.
 - Renommez une des définitions de la règle '${name}'.
 - Supprimez une des définitions de la règle '${name}'.
 `,
-        },
-      };
+        });
+      }
+      if (
+        e.message.startsWith(
+          "Implicit map keys need to be followed by map values",
+        )
+      ) {
+        const match = e.message.match(
+          /^Implicit map keys need to be followed by map values at line (\d+), column (\d+)/,
+        );
+        const line = Number(match?.[1]) - 1 ?? 0;
+        const column = Number(match?.[2]) - 1 ?? 0;
+        const name = e.message.match(/\s*(.*)\n\s*\^+/)?.[1] ?? "debug";
+
+        errors.push({
+          severity: DiagnosticSeverity.Error,
+          range: {
+            start: { line, character: column },
+            end: { line, character: column + name.length },
+          },
+          message: `[Erreur de syntaxe]
+L'attribut '${name}' doit être suivi d'une valeur.
+
+[Exemple]
+  ${name}: 42
+          `,
+        });
+      }
     }
-    return {
-      rawRules: {},
-      error: {
+    if (errors.length === 0) {
+      errors.push({
         severity: DiagnosticSeverity.Error,
         range: {
           // TODO: use the tree-sitter CST to get the position of the
@@ -117,8 +142,10 @@ La règle '${name}' est définie plusieurs fois dans le fichier.
         },
         message: e.message,
         source: "publicodes",
-      },
-    };
+      });
+    }
+
+    return { rawRules: {}, errors };
   }
 }
 
