@@ -4,11 +4,21 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as path from "path";
-import { workspace, ExtensionContext } from "vscode";
+import {
+  workspace,
+  ExtensionContext,
+  languages,
+  TextDocument,
+  SemanticTokens,
+} from "vscode";
 
 import {
+  CancellationToken,
   LanguageClient,
   LanguageClientOptions,
+  SemanticTokenModifiers,
+  SemanticTokenTypes,
+  SemanticTokensParams,
   ServerOptions,
   TransportKind,
 } from "vscode-languageclient/node";
@@ -50,6 +60,49 @@ export function activate(context: ExtensionContext) {
     "Publicodes Language Server",
     serverOptions,
     clientOptions,
+  );
+
+  context.subscriptions.push(
+    languages.registerDocumentSemanticTokensProvider(
+      { scheme: "file", language: "publicodes" },
+      {
+        async provideDocumentSemanticTokens(
+          document: TextDocument,
+          _token: CancellationToken,
+        ): Promise<SemanticTokens> {
+          const params: SemanticTokensParams = {
+            textDocument: { uri: document.uri.toString() },
+          };
+
+          return client
+            .sendRequest("textDocument/semanticTokens/full", params)
+            .catch((e) => {
+              console.error(
+                "[Publicodes] Error while requesting semantic tokens:",
+                e,
+              );
+              return e;
+            }) as Promise<SemanticTokens>;
+        },
+      },
+      // TODO: duplicate code from server/src/semanticTokens.ts
+      {
+        tokenTypes: [
+          SemanticTokenTypes.function,
+          SemanticTokenTypes.number,
+          SemanticTokenTypes.macro,
+          SemanticTokenTypes.string,
+          SemanticTokenTypes.comment,
+          SemanticTokenTypes.variable,
+          SemanticTokenTypes.operator,
+          SemanticTokenTypes.namespace,
+        ],
+        tokenModifiers: [
+          SemanticTokenModifiers.readonly,
+          SemanticTokenModifiers.documentation,
+        ],
+      },
+    ),
   );
 
   // Start the client. This will also launch the server

@@ -29,6 +29,9 @@
     "postinstall": "yarn install --cwd client && yarn install --cwd server",
     "test": "sh ./scripts/e2e.sh"
   },
+  "activationEvents": [
+    "onLanguage:publicodes"
+  ],
   "contributes": {
     "languages": [
       {
@@ -63,12 +66,13 @@
         "editor.insertSpaces": true,
         "editor.tabSize": 2,
         "editor.autoIndent": "advanced",
-        "diffEditor.ignoreTrimWhitespace": false,
         "editor.quickSuggestions": {
           "other": true,
           "comments": true,
           "strings": true
-        }
+        },
+        "editor.semanticHighlight.enable": true,
+        "diffEditor.ignoreTrimWhitespace": false
       }
     },
     "configuration": {

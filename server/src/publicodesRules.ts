@@ -28,11 +28,7 @@ export function parseDir(ctx: LSContext, uri: string) {
       return;
     }
     const filePath = join(path, file);
-    if (
-      filePath.endsWith(PUBLICODES_FILE_EXTENSION) ||
-      // TODO: should be all allowed extensions, temporary fix to test
-      filePath.endsWith(".yaml")
-    ) {
+    if (filePath.endsWith(PUBLICODES_FILE_EXTENSION)) {
       parseDocument(
         ctx,
         filePath,
@@ -120,7 +116,7 @@ La règle '${name}' est définie plusieurs fois dans le fichier.
         );
         const line = Number(match?.[1]) - 1 ?? 0;
         const column = Number(match?.[2]) - 1 ?? 0;
-        const name = e.message.match(/\s*(.*)\n\s*\^+/)?.[1] ?? "debug";
+        const name = e.message.match(/\s*(.*)\n\s*\^+/)?.[1] ?? "<nom>";
 
         errors.push({
           severity: DiagnosticSeverity.Error,
@@ -130,6 +126,34 @@ La règle '${name}' est définie plusieurs fois dans le fichier.
           },
           message: `[Erreur de syntaxe]
 L'attribut '${name}' doit être suivi d'une valeur.
+
+[Solutions]
+- Il se peut que vous ayez oublié un deux-points (':') après l'attribut.
+
+[Exemple]
+  ${name}: 42
+          `,
+        });
+      }
+      if (e.message.startsWith("Implicit keys need to be on a single line")) {
+        const match = e.message.match(
+          /^Implicit keys need to be on a single line at line (\d+), column (\d+)/,
+        );
+        const line = Number(match?.[1]) - 1 ?? 0;
+        const column = Number(match?.[2]) - 1 ?? 0;
+        const name = e.message.match(/\s*(.*)\n\s*\^+/)?.[1] ?? "<nom>";
+
+        errors.push({
+          severity: DiagnosticSeverity.Error,
+          range: {
+            start: { line, character: column },
+            end: { line, character: column + name.length },
+          },
+          message: `[Erreur de syntaxe]
+L'attribut '${name}' doit être suivi d'une valeur.
+
+[Solutions]
+- Il se peut que vous ayez oublié un deux-points (':') après l'attribut.
 
 [Exemple]
   ${name}: 42

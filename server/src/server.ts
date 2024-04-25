@@ -7,6 +7,13 @@ import {
   TextDocuments,
   ProposedFeatures,
   InitializeParams,
+  SemanticTokensBuilder,
+  HandlerResult,
+  DocumentSymbol,
+  SymbolInformation,
+  SymbolKind,
+  SemanticTokens,
+  SemanticTokenTypes,
 } from "vscode-languageserver/node.js";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
@@ -17,6 +24,8 @@ import { completionHandler, completionResolveHandler } from "./completion";
 import { changeConfigurationHandler } from "./configuration";
 import validate from "./validate";
 import { onChangeHandler } from "./onChange";
+import onDefinitionHandler from "./onDefinition";
+import { semanticTokensFullProvider } from "./semanticTokens";
 
 let ctx: LSContext = {
   // Create a connection for the server, using Node's IPC as a transport.
@@ -55,12 +64,18 @@ ctx.connection.onInitialized(initializedHandler(ctx));
 
 ctx.connection.onDidChangeConfiguration(changeConfigurationHandler(ctx));
 
+ctx.connection.onRequest(
+  "textDocument/semanticTokens/full",
+  semanticTokensFullProvider(ctx),
+);
+
+ctx.connection.onDefinition(onDefinitionHandler(ctx));
+
 // Only keep settings for open documents
 ctx.documents.onDidClose((e) => {
   ctx.documentSettings.delete(e.document.uri);
 });
 
-// Only keep settings for open documents
 ctx.documents.onDidSave((e) => {
   validate(ctx, e.document);
 });
@@ -69,25 +84,20 @@ ctx.documents.onDidOpen((e) => {
   ctx.lastOpenedFile = e.document.uri;
 });
 
-// The content of a text document has changed. This event is emitted
-// when the text document first opened or when its content has changed.
+// The content of a text document has changed. This event is emitted when the
+// text document first opened or when its content has changed.
 ctx.documents.onDidChangeContent(onChangeHandler(ctx));
 
 // ctx.connection.onDidSaveTextDocument(onSaveHandler(ctx));
 
-ctx.connection.onDidChangeWatchedFiles((_change) => {
-  // Monitored files have change in VSCode
-  ctx.connection.console.log("We received an file change event");
-});
-
 ctx.connection.onCompletion(completionHandler(ctx));
 
-// This handler resolves additional information for the item selected in
-// the completion list.
+// This handler resolves additional information for the item selected in the
+// completion list.
 ctx.connection.onCompletionResolve(completionResolveHandler(ctx));
 
-// Make the text document manager listen on the connection
-// for open, change and close text document events
+// Make the text document manager listen on the connection for open, change and
+// close text document events
 ctx.documents.listen(ctx.connection);
 
 // Listen on the connection

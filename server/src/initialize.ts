@@ -2,6 +2,9 @@ import {
   InitializeParams,
   InitializeResult,
   TextDocumentSyncKind,
+  SemanticTokensLegend,
+  SemanticTokenTypes,
+  SemanticTokenModifiers,
 } from "vscode-languageserver/node.js";
 import { GlobalConfig } from "./context";
 
@@ -33,6 +36,28 @@ export default function initialize(params: InitializeParams): {
       // Tell the client that this server supports code completion.
       completionProvider: {
         resolveProvider: true,
+      },
+
+      definitionProvider: true,
+      // documentSymbolProvider: true,
+      semanticTokensProvider: {
+        legend: {
+          tokenTypes: [
+            SemanticTokenTypes.function,
+            SemanticTokenTypes.number,
+            SemanticTokenTypes.macro,
+            SemanticTokenTypes.string,
+            SemanticTokenTypes.comment,
+            SemanticTokenTypes.variable,
+            SemanticTokenTypes.operator,
+            SemanticTokenTypes.namespace,
+          ],
+          tokenModifiers: [],
+        },
+        range: false,
+        full: {
+          delta: false,
+        },
       },
 
       // TODO: enable providers
