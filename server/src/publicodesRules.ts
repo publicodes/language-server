@@ -7,7 +7,7 @@ import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node.js";
 import { getModelFromSource } from "@publicodes/tools/compilation";
 
 import { FilePath, LSContext, RawPublicodes, RuleDef } from "./context";
-import { tsParseText } from "./treeSitter";
+import { getTSTree } from "./treeSitter";
 
 const PUBLICODES_FILE_EXTENSION = ".publicodes";
 
@@ -46,7 +46,8 @@ export function parseDocument(
   document?: TextDocument,
 ) {
   const fileContent = document?.getText() ?? readFileSync(filePath).toString();
-  const tsTree = tsParseText(fileContent);
+  const fileInfos = ctx.fileInfos.get(filePath);
+  const tsTree = getTSTree(fileContent, fileInfos, document);
   const { rawRules, errors } = parseRawRules(filePath);
   const ruleDefs = collectRuleDefs(tsTree);
 

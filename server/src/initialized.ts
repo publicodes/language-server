@@ -25,6 +25,7 @@ export default function intializedHandler(ctx: LSContext) {
             readdirSync(ctx.rootFolderPath).forEach((file) => {
               const path = `${ctx.rootFolderPath}/${file}`;
               if (!file.startsWith(".") && statSync(path)?.isDirectory()) {
+                // TODO: maybe not needed anymore as rellying on the @publicodes/tools lib
                 const nodeModulesPath = `${path}/node_modules`;
                 if (existsSync(nodeModulesPath)) {
                   ctx.nodeModulesPaths?.push(nodeModulesPath);

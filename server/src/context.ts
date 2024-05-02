@@ -46,6 +46,9 @@ export type FileInfos = {
   // NOTE: It is stored to get more efficient parsing when the file is changed.
   // NOTE: It's not used for now, because at first try, it was not working well.
   tsTree: TSParser.Tree;
+  // Document version to check if the document has changed since the last parse.
+  // NOTE: for now, it's only used to skip the tree-sitter parsing if the document has not changed.
+  version?: number;
 };
 
 export type RuleDef = {
