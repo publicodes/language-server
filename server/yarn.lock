@@ -60,11 +60,9 @@ publicodes@^1.1.1, publicodes@^1.2.0:
   resolved "https://registry.yarnpkg.com/publicodes/-/publicodes-1.2.0.tgz#2856891da07633315eff419402bb61109045504d"
   integrity sha512-qit3KsTqwZct5Xt6uyJ83yXNXxxScKuSRvemUgCRWEczP/mPAX/tiDQUgwwOC2fDoiCuQuZ9EiQwU5HfzHFIJQ==
 
-"tree-sitter-publicodes@file:../../tree-sitter-publicodes":
-  version "0.1.0"
-  dependencies:
-    node-addon-api "^7.1.0"
-    node-gyp-build "^4.8.0"
+"tree-sitter-publicodes@link:../../tree-sitter-publicodes":
+  version "0.0.0"
+  uid ""
 
 tree-sitter@^0.21.1:
   version "0.21.1"
