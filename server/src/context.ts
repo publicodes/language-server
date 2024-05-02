@@ -44,12 +44,12 @@ export type FileInfos = {
   rawRules: RawPublicodes;
   // Tree-sitter CST of the file used to extract the rules.
   // NOTE: It is stored to get more efficient parsing when the file is changed.
+  // NOTE: It's not used for now, because at first try, it was not working well.
   tsTree: TSParser.Tree;
 };
 
 export type RuleDef = {
-  kind: "rule" | "namespace" | "constant";
-  name: string;
+  names: string[];
   pos: {
     start: TSParser.Point;
     end: TSParser.Point;

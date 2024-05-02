@@ -78,12 +78,9 @@ export default async function validate(
             .href
         : document.uri;
 
-    ctx.connection.console.log(
-      `wrong rule: ${wrongRule}, file path: ${filePath}, errorURI: ${errorURI}, documentUri: ${document.uri}`,
-    );
     const pos = ctx.fileInfos
       .get(filePath)
-      ?.ruleDefs.find(({ name }) => name === wrongRule)?.pos ?? {
+      ?.ruleDefs.find(({ names }) => names.join(" . ") === wrongRule)?.pos ?? {
       start: { row: 0, column: 0 },
       end: { row: 0, column: 0 },
     };

@@ -2,11 +2,9 @@ import {
   InitializeParams,
   InitializeResult,
   TextDocumentSyncKind,
-  SemanticTokensLegend,
-  SemanticTokenTypes,
-  SemanticTokenModifiers,
 } from "vscode-languageserver/node.js";
 import { GlobalConfig } from "./context";
+import { tokenModifiers, tokenTypes } from "./semanticTokens";
 
 export default function initialize(params: InitializeParams): {
   config: GlobalConfig;
@@ -31,7 +29,7 @@ export default function initialize(params: InitializeParams): {
   const initResult: InitializeResult = {
     // Defines the capabilities provided by the server
     capabilities: {
-      textDocumentSync: TextDocumentSyncKind.Incremental,
+      textDocumentSync: TextDocumentSyncKind.Full,
 
       // Tell the client that this server supports code completion.
       completionProvider: {
@@ -42,17 +40,8 @@ export default function initialize(params: InitializeParams): {
       // documentSymbolProvider: true,
       semanticTokensProvider: {
         legend: {
-          tokenTypes: [
-            SemanticTokenTypes.function,
-            SemanticTokenTypes.number,
-            SemanticTokenTypes.macro,
-            SemanticTokenTypes.string,
-            SemanticTokenTypes.comment,
-            SemanticTokenTypes.variable,
-            SemanticTokenTypes.operator,
-            SemanticTokenTypes.namespace,
-          ],
-          tokenModifiers: [],
+          tokenTypes,
+          tokenModifiers,
         },
         range: false,
         full: {

@@ -56,10 +56,6 @@ const getRuleCompletionItems = (
   return Object.entries(ctx.parsedRules).map(([dottedName, rule]) => {
     const { titre, description, icônes } = (rule as RuleNode).rawNode;
 
-    ctx.connection.console.log(
-      `[completion] ${dottedName} - ${JSON.stringify(rule.rawNode, null, 2)}`,
-    );
-
     const labelDetails = {
       detail: (icônes != undefined ? ` ${icônes}` : "") + " [règle]",
       description: titre,

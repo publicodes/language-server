@@ -86,7 +86,7 @@ ctx.documents.onDidOpen((e) => {
 
 // The content of a text document has changed. This event is emitted when the
 // text document first opened or when its content has changed.
-ctx.documents.onDidChangeContent(onChangeHandler(ctx));
+// ctx.documents.onDidChangeContent(onChangeHandler(ctx));
 
 // ctx.connection.onDidSaveTextDocument(onSaveHandler(ctx));
 

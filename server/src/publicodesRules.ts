@@ -3,17 +3,13 @@ import { join } from "path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import TSParser from "tree-sitter";
-import Publicodes from "tree-sitter-publicodes";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node.js";
 import { getModelFromSource } from "@publicodes/tools/compilation";
 
 import { FilePath, LSContext, RawPublicodes, RuleDef } from "./context";
+import { tsParseText } from "./treeSitter";
 
 const PUBLICODES_FILE_EXTENSION = ".publicodes";
-
-// NOTE: could be moved to the LSContext
-const parser = new TSParser();
-parser.setLanguage(Publicodes);
 
 /**
  * Explore recursively all files in the workspace folder and concat all yaml files into one string for parsing
@@ -23,6 +19,7 @@ parser.setLanguage(Publicodes);
 export function parseDir(ctx: LSContext, uri: string) {
   const path = fileURLToPath(uri);
   const files = readdirSync(path);
+
   files?.forEach((file) => {
     if (file.startsWith(".")) {
       return;
@@ -48,9 +45,8 @@ export function parseDocument(
   filePath: FilePath,
   document?: TextDocument,
 ) {
-  const fileContent = readFileSync(filePath).toString();
-  const currentFileInfos = ctx.fileInfos.get(filePath);
-  const tsTree = parser.parse(fileContent, currentFileInfos?.tsTree);
+  const fileContent = document?.getText() ?? readFileSync(filePath).toString();
+  const tsTree = tsParseText(fileContent);
   const { rawRules, errors } = parseRawRules(filePath);
   const ruleDefs = collectRuleDefs(tsTree);
 
@@ -62,7 +58,8 @@ export function parseDocument(
   });
 
   ruleDefs.forEach((ruleDef) => {
-    ctx.ruleToFileNameMap.set(ruleDef.name, filePath);
+    const fullName = ruleDef.names.join(" . ");
+    ctx.ruleToFileNameMap.set(fullName, filePath);
   });
 
   if (errors) {
@@ -191,30 +188,26 @@ function collectRuleDefs(tsTree: TSParser.Tree): RuleDef[] {
   const rules: RuleDef[] = [];
 
   tsTree.rootNode.children.forEach((child) => {
-    switch (child.type) {
-      case "rule": {
-        const pos = { start: child.startPosition, end: child.endPosition };
-        const firstNamedChild = child.firstNamedChild;
-        if (!firstNamedChild) {
-          // TODO: manage error
-          return;
-        }
+    if (child.type === "rule") {
+      let ruleNameNode = child.firstNamedChild;
+      let startPos = ruleNameNode.startPosition;
+      let endPos = ruleNameNode.endPosition;
+      let names = [];
 
-        const ruleName = firstNamedChild.text;
-        const body = firstNamedChild.nextNamedSibling;
-
-        if (!body) {
-          return rules.push({ kind: "namespace", name: ruleName, pos });
-        }
-
-        return rules.push({
-          kind: body.type === "rule_body" ? "rule" : "constant",
-          name: ruleName,
-          pos,
-        });
+      while (ruleNameNode && ruleNameNode.type === "name") {
+        names.push(ruleNameNode.text);
+        endPos = ruleNameNode.endPosition;
+        ruleNameNode = ruleNameNode.nextNamedSibling;
       }
-      case "comment":
-        return;
+
+      return rules.push({
+        names,
+        // NOTE: do we want to store all the positions of the rule names?
+        pos: {
+          start: startPos,
+          end: endPos,
+        },
+      });
     }
   });
 
