@@ -5,27 +5,23 @@ import {
   MarkupKind,
   TextDocumentPositionParams,
 } from "vscode-languageserver/node.js";
-import { LSContext } from "./context";
+import { DottedName, LSContext } from "./context";
 import { RuleNode } from "publicodes";
 import { mechanisms } from "./completion-items/mechanisms";
 import { keywords } from "./completion-items/keywords";
 import { fileURLToPath } from "node:url";
+import { getRuleNameAt } from "./treeSitter";
 
 export function completionHandler(ctx: LSContext) {
   return (
     textDocumentPosition: TextDocumentPositionParams,
   ): CompletionItem[] => {
-    const { textDocument } = textDocumentPosition;
-    const currFileName = fileURLToPath(textDocument.uri)
-      .split("/")
-      .pop()
-      ?.slice(0, ".publicodes".length * -1);
+    const { textDocument, position } = textDocumentPosition;
+    const filePath = fileURLToPath(textDocument.uri);
+    const fullRefName = getRuleNameAt(ctx, filePath, position.line);
 
-    ctx.connection.console.log(
-      `Completion request received: URI: ${currFileName}`,
-    );
     return [
-      ...getRuleCompletionItems(ctx, currFileName),
+      ...getRuleCompletionItems(ctx, fullRefName),
       ...mechanismsCompletionItems,
       ...keywordsCompletionItems,
     ];
@@ -51,21 +47,20 @@ export function completionResolveHandler(_ctx: LSContext) {
 
 const getRuleCompletionItems = (
   ctx: LSContext,
-  currFileName?: string,
+  currRuleName: DottedName,
 ): CompletionItem[] => {
   return Object.entries(ctx.parsedRules).map(([dottedName, rule]) => {
     const { titre, description, icônes } = (rule as RuleNode).rawNode;
-
     const labelDetails = {
       detail: (icônes != undefined ? ` ${icônes}` : "") + " [règle]",
       description: titre,
     };
-
+    // Remove the current rule name from the inserted text
     const insertText =
-      currFileName && dottedName.startsWith(currFileName)
-        ? // Remove the current file name from the insert text
-          dottedName.slice(currFileName.length + " . ".length)
+      currRuleName && dottedName.startsWith(currRuleName)
+        ? dottedName.slice(currRuleName.length + " . ".length)
         : dottedName;
+
     return {
       label: dottedName,
       kind: CompletionItemKind.Function,
