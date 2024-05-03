@@ -5,6 +5,7 @@ import {
   TextDocuments,
 } from "vscode-languageserver/node.js";
 import * as TSParser from "tree-sitter";
+import Engine from "publicodes";
 
 export type GlobalConfig = {
   hasConfigurationCapability: boolean;
@@ -76,6 +77,8 @@ export type LSContext = {
   documentSettings: Map<string, Thenable<DocumentSettings>>;
   fileInfos: Map<FilePath, FileInfos>;
   diagnostics: Diagnostic[];
+
+  engine: Engine<string>;
 
   // TODO: maybe to remove
   ruleToFileNameMap: Map<DottedName, FilePath>;

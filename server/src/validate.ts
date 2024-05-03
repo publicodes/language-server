@@ -1,7 +1,7 @@
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { LSContext } from "./context";
 import Engine from "publicodes";
-import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node.js";
+import { DiagnosticSeverity } from "vscode-languageserver/node.js";
 import { parseDocument } from "./parseRules";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -56,13 +56,10 @@ export default async function validate(
     ctx.connection.console.log(
       `[validate] Parsing ${Object.keys(ctx.rawPublicodesRules).length} rules`,
     );
-    const engine = new Engine(ctx.rawPublicodesRules);
-    ctx.parsedRules = engine.getParsedRules();
+    ctx.engine = new Engine(ctx.rawPublicodesRules);
+    ctx.parsedRules = ctx.engine.getParsedRules();
     ctx.connection.console.log(
       `[validate] Parsed ${Object.keys(ctx.parsedRules).length} rules`,
-    );
-    ctx.connection.console.log(
-      `[validate] Rules: ${JSON.stringify(Object.keys(ctx.parsedRules), null, 2)}`,
     );
     // Remove previous diagnostics
     ctx.URIToRevalidate.delete(document.uri);

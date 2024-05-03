@@ -19,6 +19,7 @@ import validate from "./validate";
 import onDefinitionHandler from "./onDefinition";
 import onHoverHandler from "./onHover";
 import { semanticTokensFullProvider } from "./semanticTokens";
+import Engine from "publicodes";
 
 let ctx: LSContext = {
   // Create a connection for the server, using Node's IPC as a transport.
@@ -36,6 +37,7 @@ let ctx: LSContext = {
     hasWorkspaceFolderCapability: false,
     hasDiagnosticRelatedInformationCapability: false,
   },
+  engine: new Engine({}),
   fileInfos: new Map(),
   diagnostics: [],
   ruleToFileNameMap: new Map(),

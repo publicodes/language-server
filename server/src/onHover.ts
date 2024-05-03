@@ -2,6 +2,7 @@ import { HandlerResult, Hover, HoverParams } from "vscode-languageserver";
 import { LSContext } from "./context";
 import { getFullRefName } from "./treeSitter";
 import { fileURLToPath } from "url";
+import { serializeEvaluation, serializeUnit } from "publicodes";
 
 export default function (ctx: LSContext) {
   return (params: HoverParams): HandlerResult<Hover, void> => {
@@ -31,7 +32,6 @@ export default function (ctx: LSContext) {
     switch (node.type) {
       case "name": {
         try {
-          // TODO: could be extracted to an helper?
           const fullRefName = getFullRefName(
             ctx,
             fileURLToPath(textDocument.uri),
@@ -39,16 +39,12 @@ export default function (ctx: LSContext) {
           );
 
           const rawRule = ctx.rawPublicodesRules[fullRefName];
+          const nodeValue = ctx.engine.evaluate(fullRefName);
 
-          const value =
-            `## ${rawRule?.titre ?? fullRefName}\n\n` +
-            Object.entries(rawRule ?? {})
-              .map(([key, value]) => {
-                if (key !== "titre") {
-                  return `### ${key}\n\n${value}`;
-                }
-              })
-              .join("\n\n");
+          // TODO: polish the hover message
+          const value = `**${rawRule?.titre ?? fullRefName}** (${serializeEvaluation(nodeValue)})
+${rawRule?.description ? `\n### Description\n\n${rawRule.description}\n\n` : ""}
+${rawRule?.note ? `### Note\n\n${rawRule.note}` : ""}`;
 
           return {
             contents: {
@@ -62,14 +58,6 @@ export default function (ctx: LSContext) {
           );
           break;
         }
-      }
-      default: {
-        return {
-          contents: {
-            kind: "markdown",
-            value: `(${node.type})`,
-          },
-        };
       }
     }
   };
