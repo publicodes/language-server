@@ -37,7 +37,7 @@ export default function initialize(params: InitializeParams): {
       },
 
       definitionProvider: true,
-      // documentSymbolProvider: true,
+      hoverProvider: true,
       semanticTokensProvider: {
         legend: {
           tokenTypes,
@@ -48,9 +48,6 @@ export default function initialize(params: InitializeParams): {
           delta: false,
         },
       },
-
-      // TODO: enable providers
-      hoverProvider: false,
     },
   };
   if (hasWorkspaceFolderCapability) {

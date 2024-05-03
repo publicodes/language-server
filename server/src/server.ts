@@ -7,13 +7,6 @@ import {
   TextDocuments,
   ProposedFeatures,
   InitializeParams,
-  SemanticTokensBuilder,
-  HandlerResult,
-  DocumentSymbol,
-  SymbolInformation,
-  SymbolKind,
-  SemanticTokens,
-  SemanticTokenTypes,
 } from "vscode-languageserver/node.js";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
@@ -23,8 +16,8 @@ import initializedHandler from "./initialized";
 import { completionHandler, completionResolveHandler } from "./completion";
 import { changeConfigurationHandler } from "./configuration";
 import validate from "./validate";
-import { onChangeHandler } from "./onChange";
 import onDefinitionHandler from "./onDefinition";
+import onHoverHandler from "./onHover";
 import { semanticTokensFullProvider } from "./semanticTokens";
 
 let ctx: LSContext = {
@@ -69,8 +62,6 @@ ctx.connection.onRequest(
   semanticTokensFullProvider(ctx),
 );
 
-ctx.connection.onDefinition(onDefinitionHandler(ctx));
-
 // Only keep settings for open documents
 ctx.documents.onDidClose((e) => {
   ctx.documentSettings.delete(e.document.uri);
@@ -83,6 +74,9 @@ ctx.documents.onDidSave((e) => {
 ctx.documents.onDidOpen((e) => {
   ctx.lastOpenedFile = e.document.uri;
 });
+
+ctx.connection.onDefinition(onDefinitionHandler(ctx));
+ctx.connection.onHover(onHoverHandler(ctx));
 
 // The content of a text document has changed. This event is emitted when the
 // text document first opened or when its content has changed.
