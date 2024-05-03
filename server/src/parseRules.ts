@@ -12,7 +12,8 @@ import { getTSTree } from "./treeSitter";
 const PUBLICODES_FILE_EXTENSION = ".publicodes";
 
 /**
- * Explore recursively all files in the workspace folder and concat all yaml files into one string for parsing
+ * Explore recursively all files in the workspace folder and concat all yaml
+ * files into one string for parsing.
  *
  * PERF: file reading is synchronous, should be done in parallel
  */
@@ -203,10 +204,13 @@ function collectRuleDefs(tsTree: TSParser.Tree): RuleDef[] {
 
       return rules.push({
         names,
-        // NOTE: do we want to store all the positions of the rule names?
-        pos: {
+        namesPos: {
           start: startPos,
           end: endPos,
+        },
+        defPos: {
+          start: child.startPosition,
+          end: child.endPosition,
         },
       });
     }

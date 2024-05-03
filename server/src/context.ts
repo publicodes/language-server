@@ -52,8 +52,15 @@ export type FileInfos = {
 };
 
 export type RuleDef = {
+  // The name of the rule (without the dot notation)
   names: string[];
-  pos: {
+  // The position of the rule name in the file
+  namesPos: {
+    start: TSParser.Point;
+    end: TSParser.Point;
+  };
+  // The position of the rule definition in the file
+  defPos: {
     start: TSParser.Point;
     end: TSParser.Point;
   };

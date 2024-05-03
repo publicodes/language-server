@@ -2,7 +2,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { LSContext } from "./context";
 import Engine from "publicodes";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node.js";
-import { parseDocument } from "./publicodesRules";
+import { parseDocument } from "./parseRules";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 function getPublicodeRuleFileNameFromError(e: Error) {
@@ -61,6 +61,9 @@ export default async function validate(
     ctx.connection.console.log(
       `[validate] Parsed ${Object.keys(ctx.parsedRules).length} rules`,
     );
+    ctx.connection.console.log(
+      `[validate] Rules: ${JSON.stringify(Object.keys(ctx.parsedRules), null, 2)}`,
+    );
     // Remove previous diagnostics
     ctx.URIToRevalidate.delete(document.uri);
     ctx.connection.sendDiagnostics({ uri: document.uri, diagnostics: [] });
@@ -80,7 +83,8 @@ export default async function validate(
 
     const pos = ctx.fileInfos
       .get(filePath)
-      ?.ruleDefs.find(({ names }) => names.join(" . ") === wrongRule)?.pos ?? {
+      ?.ruleDefs.find(({ names }) => names.join(" . ") === wrongRule)
+      ?.namesPos ?? {
       start: { row: 0, column: 0 },
       end: { row: 0, column: 0 },
     };

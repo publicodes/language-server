@@ -1,7 +1,7 @@
 import { DidChangeConfigurationNotification } from "vscode-languageserver/node.js";
 import { LSContext } from "./context";
 import { fileURLToPath } from "node:url";
-import { parseDir } from "./publicodesRules";
+import { parseDir } from "./parseRules";
 import validate from "./validate";
 import { existsSync, statSync } from "fs";
 import { readdirSync } from "node:fs";
