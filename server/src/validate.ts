@@ -46,6 +46,7 @@ export default async function validate(
   try {
     // Merge all raw rules (from all files) into one object
     // NOTE: a better way could be found?
+    ctx.rawPublicodesRules = {}
     ctx.fileInfos.forEach((fileInfo) => {
       ctx.rawPublicodesRules = {
         ...ctx.rawPublicodesRules,
@@ -75,7 +76,7 @@ export default async function validate(
     errorURI =
       wrongRule !== undefined
         ? pathToFileURL(ctx.ruleToFileNameMap.get(wrongRule) ?? document.uri)
-            .href
+          .href
         : document.uri;
 
     const pos = ctx.fileInfos
