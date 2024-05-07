@@ -36,6 +36,10 @@ export default function intializedHandler(ctx: LSContext) {
           folders.forEach((folder) => {
             parseDir(ctx, folder.uri);
           });
+          ctx.connection.console.log(`[initialized] Parsing done.`);
+          ctx.connection.console.log(
+            `[initialized] Found ${ctx.diagnostics.size} diagnostics when parsing.`,
+          );
           validate(ctx);
         }
       });

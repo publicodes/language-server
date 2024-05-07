@@ -54,7 +54,7 @@ export default function (ctx: LSContext) {
 
       const ruleDef = ctx.fileInfos
         .get(filePath)
-        ?.ruleDefs.find((ruleDef) => ruleDef.names.join(" . ") === fullRefName);
+        ?.ruleDefs.find(({ dottedName }) => dottedName === fullRefName);
       if (ruleDef == undefined) {
         ctx.connection.console.error(
           `[onDefinition] ${textDocument.uri}:${position.line}:${position.character} no rule definition found for ${fullRefName}`,

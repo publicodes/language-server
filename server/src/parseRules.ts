@@ -8,7 +8,7 @@ import { getModelFromSource } from "@publicodes/tools/compilation";
 
 import { FilePath, LSContext, RawPublicodes, RuleDef } from "./context";
 import { getTSTree } from "./treeSitter";
-import { mapAppend } from "./helpers";
+import { mapAppend, positionToRange } from "./helpers";
 
 const PUBLICODES_FILE_EXTENSION = ".publicodes";
 
@@ -51,21 +51,42 @@ export function parseDocument(
   const fileInfos = ctx.fileInfos.get(filePath);
   const tsTree = getTSTree(fileContent, fileInfos, document);
   const { rawRules, errors } = parseRawRules(filePath);
-  const ruleDefs = collectRuleDefs(tsTree);
+  const ruleDefs = collectRuleDefs(tsTree).filter(
+    ({ dottedName, namesPos }) => {
+      const ruleFilePath = ctx.ruleToFileNameMap.get(dottedName);
+
+      // Check if the rule is already defined in another file
+      if (ruleFilePath && ruleFilePath !== filePath) {
+        errors.push({
+          severity: DiagnosticSeverity.Error,
+          range: positionToRange(namesPos),
+          message: `[ Erreur syntaxique ]
+La règle '${dottedName}' est déjà définie dans le fichier : "${ruleFilePath}".
+
+[ Solutions ]
+- Renommez une des définitions de la règle '${dottedName}'.
+- Supprimez une des définitions de la règle '${dottedName}'.`,
+        });
+        delete rawRules[dottedName];
+        return false;
+      }
+      return true;
+    },
+  );
 
   ctx.fileInfos.set(filePath, {
     // NOTE: not needed for now (we use the parsedRules from the engine)
     ruleDefs,
     rawRules,
     tsTree,
+    version: document?.version,
   });
 
-  ruleDefs.forEach((ruleDef) => {
-    const fullName = ruleDef.names.join(" . ");
-    ctx.ruleToFileNameMap.set(fullName, filePath);
+  ruleDefs.forEach(({ dottedName }) => {
+    ctx.ruleToFileNameMap.set(dottedName, filePath);
   });
 
-  if (errors) {
+  if (errors.length > 0) {
     mapAppend(ctx.diagnostics, filePath, ...errors);
   }
 }
@@ -80,7 +101,7 @@ function parseRawRules(filePath: FilePath): {
   const errors: Diagnostic[] = [];
   try {
     const resolvedRules = getModelFromSource(filePath);
-    return { rawRules: resolvedRules };
+    return { rawRules: resolvedRules, errors };
   } catch (e: any) {
     if (e instanceof Error) {
       if (e.message.startsWith("Map keys must be unique")) {
@@ -97,10 +118,10 @@ function parseRawRules(filePath: FilePath): {
             start: { line, character: column },
             end: { line, character: column + name.length },
           },
-          message: `[Erreur de syntaxe]
+          message: `[ Erreur syntaxique ]
 La règle '${name}' est définie plusieurs fois dans le fichier.
 
-[Solutions]
+[ Solutions ]
 - Renommez une des définitions de la règle '${name}'.
 - Supprimez une des définitions de la règle '${name}'.
 `,
@@ -124,13 +145,13 @@ La règle '${name}' est définie plusieurs fois dans le fichier.
             start: { line, character: column },
             end: { line, character: column + name.length },
           },
-          message: `[Erreur de syntaxe]
+          message: `[ Erreur syntaxique ]
 L'attribut '${name}' doit être suivi d'une valeur.
 
-[Solutions]
+[ Solutions ]
 - Il se peut que vous ayez oublié un deux-points (':') après l'attribut.
 
-[Exemple]
+[ Exemple ]
   ${name}: 42
           `,
         });
@@ -149,13 +170,13 @@ L'attribut '${name}' doit être suivi d'une valeur.
             start: { line, character: column },
             end: { line, character: column + name.length },
           },
-          message: `[Erreur de syntaxe]
+          message: `[ Erreur syntaxique ]
 L'attribut '${name}' doit être suivi d'une valeur.
 
-[Solutions]
+[ Solutions ]
 - Il se peut que vous ayez oublié un deux-points (':') après l'attribut.
 
-[Exemple]
+[ Exemple ]
   ${name}: 42
           `,
         });
@@ -205,6 +226,7 @@ function collectRuleDefs(tsTree: TSParser.Tree): RuleDef[] {
 
       return rules.push({
         names,
+        dottedName: names.join(" . "),
         namesPos: {
           start: startPos,
           end: endPos,

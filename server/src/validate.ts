@@ -5,7 +5,7 @@ import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node.js";
 import { parseDocument } from "./parseRules";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { Logger } from "publicodes";
-import { mapAppend } from "./helpers";
+import { mapAppend, positionToRange } from "./helpers";
 
 export default async function validate(
   ctx: LSContext,
@@ -33,6 +33,7 @@ export default async function validate(
   }
 
   const docFilePath = fileURLToPath(document.uri);
+
   parseDocument(ctx, docFilePath, document);
 
   try {
@@ -46,12 +47,9 @@ export default async function validate(
       };
     });
 
-    ctx.connection.console.log(
-      `[validate] Parsing ${Object.keys(ctx.rawPublicodesRules).length} rules`,
-    );
-    const logger = getDiagnosticsLogger(ctx);
-    ctx.connection.console.log(`[validate] logger: ${logger}`);
-    ctx.engine = new Engine(ctx.rawPublicodesRules, { logger });
+    ctx.engine = new Engine(ctx.rawPublicodesRules, {
+      logger: getDiagnosticsLogger(ctx),
+    });
     ctx.parsedRules = ctx.engine.getParsedRules();
 
     // Evaluates all the rules to get unit warning
@@ -59,9 +57,8 @@ export default async function validate(
     Object.keys(ctx.parsedRules).forEach((rule) => ctx.engine.evaluate(rule));
 
     ctx.connection.console.log(
-      `[validate] Parsed ${Object.keys(ctx.parsedRules).length} rules`,
+      `[validate] Validation done for ${Object.keys(ctx.parsedRules).length} rules.`,
     );
-
     // Remove previous diagnostics
     ctx.diagnosticsURI.forEach((uri) => {
       ctx.connection.sendDiagnostics({ uri, diagnostics: [] });
@@ -69,9 +66,12 @@ export default async function validate(
     });
   } catch (e: any) {
     const { filePath, diagnostic } = getDiagnosticFromErrorMsg(ctx, e.message);
-    ctx.diagnostics.set(filePath, [diagnostic]);
+    mapAppend(ctx.diagnostics, filePath, diagnostic);
   }
 
+  ctx.connection.console.log(
+    `[validate] Found ${ctx.diagnostics.size} diagnostics.`,
+  );
   ctx.diagnostics.forEach((diagnostics, path) => {
     const uri = pathToFileURL(path).href;
     ctx.diagnosticsURI.add(uri);
@@ -108,8 +108,7 @@ function getDiagnosticFromErrorMsg(
   const filePath = ctx.ruleToFileNameMap.get(wrongRule);
   const pos = ctx.fileInfos
     .get(filePath)
-    ?.ruleDefs.find(({ names }) => names.join(" . ") === wrongRule)
-    ?.namesPos ?? {
+    ?.ruleDefs.find(({ dottedName }) => dottedName === wrongRule)?.namesPos ?? {
     start: { row: 0, column: 0 },
     end: { row: 0, column: 0 },
   };
@@ -118,10 +117,7 @@ function getDiagnosticFromErrorMsg(
     filePath,
     diagnostic: {
       severity,
-      range: {
-        start: { line: pos.start.row, character: pos.start.column },
-        end: { line: pos.end.row, character: pos.end.column },
-      },
+      range: positionToRange(pos),
       message: message.trimStart(),
     },
   };

@@ -49,23 +49,26 @@ export type FileInfos = {
   // NOTE: It's not used for now, because at first try, it was not working well.
   tsTree: TSParser.Tree;
   // Document version to check if the document has changed since the last parse.
-  // NOTE: for now, it's only used to skip the tree-sitter parsing if the document has not changed.
-  version?: number;
+  // NOTE: It's not used for now.
+  // NOTE: We may want to differentiate the version of the parsing and the version
+  // of the validation.
+  version: number;
+};
+
+// NOTE: we may want to directly store [Range]
+export type Position = {
+  start: TSParser.Point;
+  end: TSParser.Point;
 };
 
 export type RuleDef = {
   // The name of the rule (without the dot notation)
   names: string[];
+  dottedName: DottedName;
   // The position of the rule name in the file
-  namesPos: {
-    start: TSParser.Point;
-    end: TSParser.Point;
-  };
+  namesPos: Position;
   // The position of the rule definition in the file
-  defPos: {
-    start: TSParser.Point;
-    end: TSParser.Point;
-  };
+  defPos: Position;
 };
 
 export type LSContext = {

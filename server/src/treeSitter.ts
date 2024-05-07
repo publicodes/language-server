@@ -78,5 +78,5 @@ export function getRuleNameAt(
     return ruleDef.defPos.start.row <= row && ruleDef.defPos.end.row >= row;
   });
 
-  return ruleDef?.names.join(" . ");
+  return ruleDef?.dottedName;
 }
