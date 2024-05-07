@@ -8,6 +8,7 @@ import { getModelFromSource } from "@publicodes/tools/compilation";
 
 import { FilePath, LSContext, RawPublicodes, RuleDef } from "./context";
 import { getTSTree } from "./treeSitter";
+import { mapAppend } from "./helpers";
 
 const PUBLICODES_FILE_EXTENSION = ".publicodes";
 
@@ -65,7 +66,7 @@ export function parseDocument(
   });
 
   if (errors) {
-    ctx.diagnostics.push(...errors);
+    mapAppend(ctx.diagnostics, filePath, ...errors);
   }
 }
 

@@ -1,17 +1,11 @@
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { LSContext } from "./context";
+import { FilePath, LSContext } from "./context";
 import Engine from "publicodes";
-import { DiagnosticSeverity } from "vscode-languageserver/node.js";
+import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node.js";
 import { parseDocument } from "./parseRules";
 import { fileURLToPath, pathToFileURL } from "node:url";
-
-function getPublicodeRuleFileNameFromError(e: Error) {
-  const match = e.message.match(/➡️  Dans la règle "([^\n\r]*)"/);
-  if (match == null) {
-    return undefined;
-  }
-  return match[1];
-}
+import { Logger } from "publicodes";
+import { mapAppend } from "./helpers";
 
 export default async function validate(
   ctx: LSContext,
@@ -19,9 +13,7 @@ export default async function validate(
   // if not already opened in the editor
   documentURI?: string,
 ): Promise<void> {
-  let errorURI: string | undefined;
-
-  ctx.diagnostics = [];
+  ctx.diagnostics = new Map();
 
   if (document == undefined && ctx.lastOpenedFile != undefined) {
     if (documentURI !== undefined) {
@@ -46,7 +38,7 @@ export default async function validate(
   try {
     // Merge all raw rules (from all files) into one object
     // NOTE: a better way could be found?
-    ctx.rawPublicodesRules = {}
+    ctx.rawPublicodesRules = {};
     ctx.fileInfos.forEach((fileInfo) => {
       ctx.rawPublicodesRules = {
         ...ctx.rawPublicodesRules,
@@ -57,57 +49,88 @@ export default async function validate(
     ctx.connection.console.log(
       `[validate] Parsing ${Object.keys(ctx.rawPublicodesRules).length} rules`,
     );
-    ctx.engine = new Engine(ctx.rawPublicodesRules);
+    const logger = getDiagnosticsLogger(ctx);
+    ctx.connection.console.log(`[validate] logger: ${logger}`);
+    ctx.engine = new Engine(ctx.rawPublicodesRules, { logger });
     ctx.parsedRules = ctx.engine.getParsedRules();
+
+    // Evaluates all the rules to get unit warning
+    // PERF: with large models, this could be an issue
+    Object.keys(ctx.parsedRules).forEach((rule) => ctx.engine.evaluate(rule));
+
     ctx.connection.console.log(
       `[validate] Parsed ${Object.keys(ctx.parsedRules).length} rules`,
     );
+
     // Remove previous diagnostics
-    ctx.URIToRevalidate.delete(document.uri);
-    ctx.connection.sendDiagnostics({ uri: document.uri, diagnostics: [] });
-    if (ctx.URIToRevalidate.size > 0) {
-      ctx.URIToRevalidate.forEach((uri) => {
-        validate(ctx, ctx.documents.get(uri), uri);
-      });
-    }
+    ctx.diagnosticsURI.forEach((uri) => {
+      ctx.connection.sendDiagnostics({ uri, diagnostics: [] });
+      ctx.diagnosticsURI = new Set();
+    });
   } catch (e: any) {
-    const wrongRule = getPublicodeRuleFileNameFromError(e);
-    const filePath = ctx.ruleToFileNameMap.get(wrongRule);
-    errorURI =
-      wrongRule !== undefined
-        ? pathToFileURL(ctx.ruleToFileNameMap.get(wrongRule) ?? document.uri)
-          .href
-        : document.uri;
+    const { filePath, diagnostic } = getDiagnosticFromErrorMsg(ctx, e.message);
+    ctx.diagnostics.set(filePath, [diagnostic]);
+  }
 
-    const pos = ctx.fileInfos
-      .get(filePath)
-      ?.ruleDefs.find(({ names }) => names.join(" . ") === wrongRule)
-      ?.namesPos ?? {
-      start: { row: 0, column: 0 },
-      end: { row: 0, column: 0 },
-    };
+  ctx.diagnostics.forEach((diagnostics, path) => {
+    const uri = pathToFileURL(path).href;
+    ctx.diagnosticsURI.add(uri);
+    ctx.connection.sendDiagnostics({ uri, diagnostics });
+  });
+}
 
-    ctx.diagnostics.push({
-      severity: DiagnosticSeverity.Error,
+function getDiagnosticsLogger(ctx: LSContext): Logger {
+  return {
+    log(msg: string) {
+      ctx.connection.console.log(`[publicodes:log] ${msg}`);
+    },
+    warn(msg: string) {
+      const { filePath, diagnostic } = getDiagnosticFromErrorMsg(
+        ctx,
+        msg,
+        DiagnosticSeverity.Warning,
+      );
+      mapAppend(ctx.diagnostics, filePath, diagnostic);
+    },
+    error(msg: string) {
+      const { filePath, diagnostic } = getDiagnosticFromErrorMsg(ctx, msg);
+      mapAppend(ctx.diagnostics, filePath, diagnostic);
+    },
+  };
+}
+
+function getDiagnosticFromErrorMsg(
+  ctx: LSContext,
+  message: string,
+  severity: DiagnosticSeverity = DiagnosticSeverity.Error,
+): { filePath: FilePath | undefined; diagnostic: Diagnostic } {
+  const wrongRule = getPublicodeRuleNameFromErrorMsg(message);
+  const filePath = ctx.ruleToFileNameMap.get(wrongRule);
+  const pos = ctx.fileInfos
+    .get(filePath)
+    ?.ruleDefs.find(({ names }) => names.join(" . ") === wrongRule)
+    ?.namesPos ?? {
+    start: { row: 0, column: 0 },
+    end: { row: 0, column: 0 },
+  };
+
+  return {
+    filePath,
+    diagnostic: {
+      severity,
       range: {
         start: { line: pos.start.row, character: pos.start.column },
         end: { line: pos.end.row, character: pos.end.column },
       },
-      message: e.message,
-    });
-  }
+      message: message.trimStart(),
+    },
+  };
+}
 
-  errorURI = errorURI ?? document.uri;
-  if (ctx.diagnostics.length > 0) {
-    // TODO: what needed for?
-    ctx.URIToRevalidate.add(errorURI);
+function getPublicodeRuleNameFromErrorMsg(msg: string) {
+  const match = msg.match(/➡️  Dans la règle "([^\n\r]*)"/);
+  if (match == null) {
+    return undefined;
   }
-  console.log(
-    `[validate] Sending ${ctx.diagnostics.length} diagnostics to:`,
-    errorURI,
-  );
-  ctx.connection.sendDiagnostics({
-    uri: errorURI,
-    diagnostics: ctx.diagnostics,
-  });
+  return match[1];
 }

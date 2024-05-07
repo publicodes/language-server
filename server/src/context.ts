@@ -3,6 +3,7 @@ import {
   Connection,
   Diagnostic,
   TextDocuments,
+  URI,
 } from "vscode-languageserver/node.js";
 import * as TSParser from "tree-sitter";
 import Engine from "publicodes";
@@ -68,26 +69,25 @@ export type RuleDef = {
 };
 
 export type LSContext = {
-  connection: Connection;
   config: GlobalConfig;
-  globalSettings: DocumentSettings;
-  rootFolderPath?: string;
-  nodeModulesPaths?: string[];
-  documents: TextDocuments<TextDocument>;
+  connection: Connection;
+  diagnostics: Map<FilePath, Diagnostic[]>;
+  // URIs of the files with diagnostics, used to remove the previous
+  // diagnostics when the diagnostics are updated.
+  diagnosticsURI: Set<URI>;
   documentSettings: Map<string, Thenable<DocumentSettings>>;
-  fileInfos: Map<FilePath, FileInfos>;
-  diagnostics: Diagnostic[];
-
+  documents: TextDocuments<TextDocument>;
   engine: Engine<string>;
-
-  // TODO: maybe to remove
-  ruleToFileNameMap: Map<DottedName, FilePath>;
+  fileInfos: Map<FilePath, FileInfos>;
   fileNameToRulesMap: Map<FilePath, DottedName[]>;
+  globalSettings: DocumentSettings;
+  nodeModulesPaths?: string[];
+  parsedRules: Record<string, any>;
+  rawPublicodesRules: RawPublicodes;
+  rootFolderPath?: string;
+  ruleToFileNameMap: Map<DottedName, FilePath>;
 
   // TODO: to remove
-  rawPublicodesRules: RawPublicodes;
-  parsedRules: Record<string, any>;
   dirsToIgnore: string[];
   lastOpenedFile?: string;
-  URIToRevalidate: Set<FilePath>;
 };
