@@ -22,6 +22,7 @@ export const defaultDocSettings: DocumentSettings = {
   maxNumberOfProblems: 1000,
 };
 
+// TODO: to be configurable
 export const defaultDirsToIgnore = [
   "node_modules",
   "i18n",
@@ -73,6 +74,7 @@ export type RuleDef = {
 
 export type LSContext = {
   config: GlobalConfig;
+  dirsToIgnore: string[];
   connection: Connection;
   diagnostics: Map<FilePath, Diagnostic[]>;
   // URIs of the files with diagnostics, used to remove the previous
@@ -82,15 +84,8 @@ export type LSContext = {
   documents: TextDocuments<TextDocument>;
   engine: Engine<string>;
   fileInfos: Map<FilePath, FileInfos>;
-  fileNameToRulesMap: Map<FilePath, DottedName[]>;
   globalSettings: DocumentSettings;
-  nodeModulesPaths?: string[];
   parsedRules: Record<string, any>;
   rawPublicodesRules: RawPublicodes;
-  rootFolderPath?: string;
   ruleToFileNameMap: Map<DottedName, FilePath>;
-
-  // TODO: to remove
-  dirsToIgnore: string[];
-  lastOpenedFile?: string;
 };

@@ -30,8 +30,9 @@ let ctx: LSContext = {
   documents: new TextDocuments(TextDocument),
   // Cache the settings of all open documents
   documentSettings: new Map(),
-  // The global settings, used when the `workspace/configuration` request is not supported by the client.
-  // Please note that this is the case for the current client, but could change in the future.
+  // The global settings, used when the `workspace/configuration` request is
+  // not supported by the client. Please note that this is the case for the
+  // current client, but could change in the future.
   globalSettings: defaultDocSettings,
   config: {
     hasConfigurationCapability: false,
@@ -42,12 +43,10 @@ let ctx: LSContext = {
   fileInfos: new Map(),
   diagnostics: new Map(),
   ruleToFileNameMap: new Map(),
-  fileNameToRulesMap: new Map(),
   diagnosticsURI: new Set(),
   rawPublicodesRules: {},
   parsedRules: {},
   dirsToIgnore: defaultDirsToIgnore,
-  lastOpenedFile: undefined,
 };
 
 ctx.connection.onInitialize((params: InitializeParams) => {
@@ -72,10 +71,6 @@ ctx.documents.onDidClose((e) => {
 
 ctx.documents.onDidSave((e) => {
   validate(ctx, e.document);
-});
-
-ctx.documents.onDidOpen((e) => {
-  ctx.lastOpenedFile = e.document.uri;
 });
 
 ctx.connection.workspace.onDidDeleteFiles((e) => {
