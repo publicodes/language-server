@@ -51,6 +51,11 @@ export function parseDocument(
   const fileInfos = ctx.fileInfos.get(filePath);
   const tsTree = getTSTree(fileContent, fileInfos, document);
   const { rawRules, errors } = parseRawRules(filePath);
+
+  ctx.connection.console.log(
+    `[parseDocument] ${filePath}: errors: ${JSON.stringify(errors)}`,
+  );
+
   const ruleDefs = collectRuleDefs(tsTree).filter(
     ({ dottedName, namesPos }) => {
       const ruleFilePath = ctx.ruleToFileNameMap.get(dottedName);
@@ -96,7 +101,7 @@ La règle '${dottedName}' est déjà définie dans le fichier : "${ruleFilePath}
  */
 function parseRawRules(filePath: FilePath): {
   rawRules: RawPublicodes;
-  errors?: Diagnostic[] | undefined;
+  errors: Diagnostic[];
 } {
   const errors: Diagnostic[] = [];
   try {
@@ -181,19 +186,19 @@ L'attribut '${name}' doit être suivi d'une valeur.
           `,
         });
       }
-    }
-    if (errors.length === 0) {
-      errors.push({
-        severity: DiagnosticSeverity.Error,
-        range: {
-          // TODO: use the tree-sitter CST to get the position of the
-          // import statement
-          start: { line: 0, character: 0 },
-          end: { line: 0, character: "importer!".length },
-        },
-        message: e.message,
-        source: "publicodes",
-      });
+      if (e.message.startsWith("[ Erreur dans la macro 'importer!' ]")) {
+        errors.push({
+          severity: DiagnosticSeverity.Error,
+          range: {
+            // TODO: use the tree-sitter CST to get the position of the
+            // import statement
+            start: { line: 0, character: 0 },
+            end: { line: 0, character: "importer!".length },
+          },
+          message: e.message,
+          source: "publicodes",
+        });
+      }
     }
 
     return { rawRules: {}, errors };
@@ -214,8 +219,8 @@ function collectRuleDefs(tsTree: TSParser.Tree): RuleDef[] {
   tsTree.rootNode.children.forEach((child) => {
     if (child.type === "rule") {
       let ruleNameNode = child.firstNamedChild;
-      let startPos = ruleNameNode.startPosition;
-      let endPos = ruleNameNode.endPosition;
+      let startPos = ruleNameNode?.startPosition;
+      let endPos = ruleNameNode?.endPosition;
       let names = [];
 
       while (ruleNameNode && ruleNameNode.type === "name") {
@@ -224,18 +229,20 @@ function collectRuleDefs(tsTree: TSParser.Tree): RuleDef[] {
         ruleNameNode = ruleNameNode.nextNamedSibling;
       }
 
-      return rules.push({
-        names,
-        dottedName: names.join(" . "),
-        namesPos: {
-          start: startPos,
-          end: endPos,
-        },
-        defPos: {
-          start: child.startPosition,
-          end: child.endPosition,
-        },
-      });
+      if (startPos != null && endPos != null) {
+        rules.push({
+          names,
+          dottedName: names.join(" . "),
+          namesPos: {
+            start: startPos,
+            end: endPos,
+          },
+          defPos: {
+            start: child.startPosition,
+            end: child.endPosition,
+          },
+        });
+      }
     }
   });
 

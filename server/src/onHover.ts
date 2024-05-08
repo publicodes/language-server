@@ -2,10 +2,10 @@ import { HandlerResult, Hover, HoverParams } from "vscode-languageserver";
 import { LSContext } from "./context";
 import { getFullRefName } from "./treeSitter";
 import { fileURLToPath } from "url";
-import { serializeEvaluation, serializeUnit } from "publicodes";
+import { serializeEvaluation } from "publicodes";
 
 export default function (ctx: LSContext) {
-  return (params: HoverParams): HandlerResult<Hover, void> => {
+  return (params: HoverParams): HandlerResult<Hover, void> | undefined => {
     const { position, textDocument } = params;
     const document = ctx.documents.get(textDocument.uri);
 

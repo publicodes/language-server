@@ -52,7 +52,7 @@ export type FileInfos = {
   // NOTE: It's not used for now.
   // NOTE: We may want to differentiate the version of the parsing and the version
   // of the validation.
-  version: number;
+  version?: number;
 };
 
 // NOTE: we may want to directly store [Range]

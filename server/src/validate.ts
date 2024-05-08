@@ -10,31 +10,18 @@ import { mapAppend, positionToRange } from "./helpers";
 export default async function validate(
   ctx: LSContext,
   document?: TextDocument,
-  // if not already opened in the editor
-  documentURI?: string,
 ): Promise<void> {
+  // Send diagnostics which came from the parsing step of the initialization
+  sendDiagnostics(ctx);
+
   ctx.diagnostics = new Map();
 
-  if (document == undefined && ctx.lastOpenedFile != undefined) {
-    if (documentURI !== undefined) {
-      document = TextDocument.create(
-        documentURI,
-        "publicodes",
-        1,
-        "(we only care about the uri)",
-      );
-    } else {
-      document = ctx.documents.get(ctx.lastOpenedFile);
-    }
+  if (document) {
+    // Parse the document only if it has changed (not needed when a file is
+    // deleted for example)
+    const docFilePath = fileURLToPath(document.uri);
+    parseDocument(ctx, docFilePath, document);
   }
-
-  if (document == undefined) {
-    throw new Error("No document to validate");
-  }
-
-  const docFilePath = fileURLToPath(document.uri);
-
-  parseDocument(ctx, docFilePath, document);
 
   try {
     // Merge all raw rules (from all files) into one object
@@ -65,13 +52,27 @@ export default async function validate(
       ctx.diagnosticsURI = new Set();
     });
   } catch (e: any) {
-    const { filePath, diagnostic } = getDiagnosticFromErrorMsg(ctx, e.message);
-    mapAppend(ctx.diagnostics, filePath, diagnostic);
+    if (e instanceof Error) {
+      const { filePath, diagnostic } = getDiagnosticFromErrorMsg(
+        ctx,
+        e.message,
+      );
+      mapAppend(ctx.diagnostics, filePath, diagnostic);
+    }
   }
 
   ctx.connection.console.log(
     `[validate] Found ${ctx.diagnostics.size} diagnostics.`,
   );
+  sendDiagnostics(ctx);
+}
+
+/**
+ * Send the diagnostics to the client and store the URIs of the files with
+ * diagnostics to remove the previous diagnostics when the diagnostics are
+ * updated.
+ */
+function sendDiagnostics(ctx: LSContext) {
   ctx.diagnostics.forEach((diagnostics, path) => {
     const uri = pathToFileURL(path).href;
     ctx.diagnosticsURI.add(uri);
@@ -105,7 +106,34 @@ function getDiagnosticFromErrorMsg(
   severity: DiagnosticSeverity = DiagnosticSeverity.Error,
 ): { filePath: FilePath | undefined; diagnostic: Diagnostic } {
   const wrongRule = getPublicodeRuleNameFromErrorMsg(message);
+  if (!wrongRule) {
+    return {
+      filePath: undefined,
+      diagnostic: {
+        severity,
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: 0, character: 0 },
+        },
+        message: message,
+      },
+    };
+  }
   const filePath = ctx.ruleToFileNameMap.get(wrongRule);
+  if (!filePath) {
+    return {
+      filePath: undefined,
+      diagnostic: {
+        severity,
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: 0, character: 0 },
+        },
+        message: message,
+      },
+    };
+  }
+
   const pos = ctx.fileInfos
     .get(filePath)
     ?.ruleDefs.find(({ dottedName }) => dottedName === wrongRule)?.namesPos ?? {

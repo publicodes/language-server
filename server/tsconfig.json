@@ -12,13 +12,14 @@
 		"rootDir": "src",
 		"sourceMap": true,
 		"composite": true,
-		"incremental": true
+		"incremental": true,
+		"strict": true
 	},
 	"tsc-alias": {
 		"resolveFullPaths": true
 	},
 	"include": [
-		"src",
+		"src"
 	],
 	"exclude": [
 		"node_modules",

@@ -84,6 +84,10 @@ function collectTokens(
       case "m_inversion":
       case "m_array":
       case "m_unary": {
+        if (!node.firstChild) {
+          break;
+        }
+
         const { startPosition, endPosition } = node.firstChild;
 
         pushToken(
@@ -97,7 +101,8 @@ function collectTokens(
         if (node.type === "m_unary" && node.firstChild.type === "unité") {
           // node.children: ["unité", ":", ...]
           for (let i = 2; i < node.childCount; i++) {
-            const unitNode = node.child(i);
+            const unitNode = node.child(i)!;
+
             pushToken(
               builder,
               unitNode.startPosition.row,

@@ -44,7 +44,7 @@ export function getFullRefName(
   node: TSParser.SyntaxNode,
 ): string {
   assert(node.type === "name");
-  let currentNode = node;
+  let currentNode: TSParser.SyntaxNode | null = node;
   const ruleNames: string[] = [];
 
   while (currentNode?.type === "name") {
@@ -72,9 +72,13 @@ export function getRuleNameAt(
   filePath: string,
   row: number,
 ): string | undefined {
-  const { ruleDefs } = ctx.fileInfos.get(filePath);
+  if (!ctx.fileInfos.has(filePath)) {
+    return;
+  }
 
-  const ruleDef = ruleDefs?.find((ruleDef) => {
+  const { ruleDefs } = ctx.fileInfos.get(filePath)!;
+
+  const ruleDef = ruleDefs.find((ruleDef) => {
     return ruleDef.defPos.start.row <= row && ruleDef.defPos.end.row >= row;
   });
 

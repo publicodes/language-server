@@ -47,7 +47,7 @@ export function completionResolveHandler(_ctx: LSContext) {
 
 const getRuleCompletionItems = (
   ctx: LSContext,
-  currRuleName: DottedName,
+  currRuleName: DottedName | undefined,
 ): CompletionItem[] => {
   return Object.entries(ctx.parsedRules).map(([dottedName, rule]) => {
     const { titre, description, icônes } = (rule as RuleNode).rawNode;

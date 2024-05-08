@@ -55,6 +55,14 @@ export default function initialize(params: InitializeParams): {
       workspaceFolders: {
         supported: true,
       },
+      fileOperations: {
+        didDelete: {
+          filters: [{ scheme: "file", pattern: { glob: "**/*.publicodes" } }],
+        },
+        didRename: {
+          filters: [{ scheme: "file", pattern: { glob: "**/*.publicodes" } }],
+        },
+      },
     };
   }
   return {

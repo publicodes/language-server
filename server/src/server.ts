@@ -20,6 +20,7 @@ import onDefinitionHandler from "./onDefinition";
 import onHoverHandler from "./onHover";
 import { semanticTokensFullProvider } from "./semanticTokens";
 import Engine from "publicodes";
+import { fileURLToPath } from "node:url";
 
 let ctx: LSContext = {
   // Create a connection for the server, using Node's IPC as a transport.
@@ -75,6 +76,15 @@ ctx.documents.onDidSave((e) => {
 
 ctx.documents.onDidOpen((e) => {
   ctx.lastOpenedFile = e.document.uri;
+});
+
+ctx.connection.workspace.onDidDeleteFiles((e) => {
+  e.files.forEach(({ uri }) => {
+    const filePath = fileURLToPath(uri);
+    ctx.fileInfos.delete(filePath);
+    ctx.diagnostics.delete(filePath);
+  });
+  validate(ctx);
 });
 
 ctx.connection.onDefinition(onDefinitionHandler(ctx));

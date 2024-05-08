@@ -18,7 +18,7 @@ export default function (ctx: LSContext) {
       ctx.connection.console.error(
         `[onDefinition] document not found: ${textDocument.uri}`,
       );
-      return;
+      return [];
     }
 
     const tsTree = ctx.fileInfos.get(fileURLToPath(textDocument.uri))?.tsTree;
@@ -31,7 +31,7 @@ export default function (ctx: LSContext) {
       ctx.connection.console.error(
         `[onDefinition] ${textDocument.uri}:${position.line}:${position.character} no node found`,
       );
-      return;
+      return [];
     }
 
     if (node.type !== "name") {
@@ -49,7 +49,7 @@ export default function (ctx: LSContext) {
       );
       const filePath = ctx.ruleToFileNameMap.get(fullRefName);
       if (filePath == undefined) {
-        return undefined;
+        return [];
       }
 
       const ruleDef = ctx.fileInfos
@@ -59,7 +59,7 @@ export default function (ctx: LSContext) {
         ctx.connection.console.error(
           `[onDefinition] ${textDocument.uri}:${position.line}:${position.character} no rule definition found for ${fullRefName}`,
         );
-        return;
+        return [];
       }
 
       return {
@@ -80,5 +80,6 @@ export default function (ctx: LSContext) {
         `[onDefinition] ${textDocument.uri}:${position.line}:${position.character} error getting full ref name: ${e}`,
       );
     }
+    return [];
   };
 }

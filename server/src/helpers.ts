@@ -1,8 +1,14 @@
-import TSParser from "tree-sitter";
 import { Range } from "vscode-languageserver";
 import { Position } from "./context";
 
-export function mapAppend<K, V>(map: Map<K, V[]>, key: K, ...value: V[]) {
+export function mapAppend<K, V>(
+  map: Map<K, V[]>,
+  key: K | undefined,
+  ...value: V[]
+) {
+  if (key == undefined) {
+    return;
+  }
   const values = map.get(key) ?? [];
   values.push(...value);
   map.set(key, values);
