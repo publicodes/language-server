@@ -40,11 +40,6 @@
           "Publicodes"
         ],
         "extensions": [
-          ".publi.yml",
-          ".publicodes.yml",
-          ".publi.yaml",
-          ".publicodes.yaml",
-          ".publi",
           ".publicodes"
         ],
         "configuration": "./language-configuration.json",

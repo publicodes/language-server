@@ -59,6 +59,27 @@ ctx.connection.onInitialized(initializedHandler(ctx));
 
 ctx.connection.onDidChangeConfiguration(changeConfigurationHandler(ctx));
 
+ctx.connection.onDefinition(onDefinitionHandler(ctx));
+
+ctx.connection.onHover(onHoverHandler(ctx));
+
+// The content of a text document has changed. This event is emitted when the
+// text document first opened or when its content has changed.
+// ctx.documents.onDidChangeContent(onChangeHandler(ctx));
+
+ctx.connection.onCompletion(completionHandler(ctx));
+
+// This handler resolves additional information for the item selected in the
+// completion list.
+ctx.connection.onCompletionResolve(completionResolveHandler(ctx));
+
+// Make the text document manager listen on the connection for open, change and
+// close text document events
+ctx.documents.listen(ctx.connection);
+
+// Listen on the connection
+ctx.connection.listen();
+
 ctx.connection.onRequest(
   "textDocument/semanticTokens/full",
   semanticTokensFullProvider(ctx),
@@ -82,24 +103,40 @@ ctx.connection.workspace.onDidDeleteFiles((e) => {
   validate(ctx);
 });
 
-ctx.connection.onDefinition(onDefinitionHandler(ctx));
-ctx.connection.onHover(onHoverHandler(ctx));
+ctx.connection.workspace.onDidRenameFiles((e) => {
+  e.files.forEach(({ oldUri, newUri }) => {
+    const oldFilePath = fileURLToPath(oldUri);
+    const newFilePath = fileURLToPath(newUri);
+    const fileInfo = ctx.fileInfos.get(oldFilePath);
+    if (fileInfo == undefined) {
+      ctx.connection.console.error(
+        `[onDidRenameFiles] file info not found: ${oldFilePath}`,
+      );
+      return;
+    }
+    ctx.fileInfos.set(newFilePath, fileInfo);
+    ctx.fileInfos.delete(oldFilePath);
 
-// The content of a text document has changed. This event is emitted when the
-// text document first opened or when its content has changed.
-// ctx.documents.onDidChangeContent(onChangeHandler(ctx));
+    const diagnostics = ctx.diagnostics.get(oldFilePath);
+    if (diagnostics != undefined) {
+      ctx.diagnostics.set(newFilePath, diagnostics);
+      ctx.diagnostics.delete(oldFilePath);
+      ctx.diagnosticsURI.delete(oldUri);
+      ctx.diagnosticsURI.add(newUri);
+      ctx.connection.sendDiagnostics({
+        uri: oldUri,
+        diagnostics: [],
+      });
+      ctx.connection.sendDiagnostics({
+        uri: newUri,
+        diagnostics,
+      });
+    }
 
-// ctx.connection.onDidSaveTextDocument(onSaveHandler(ctx));
-
-ctx.connection.onCompletion(completionHandler(ctx));
-
-// This handler resolves additional information for the item selected in the
-// completion list.
-ctx.connection.onCompletionResolve(completionResolveHandler(ctx));
-
-// Make the text document manager listen on the connection for open, change and
-// close text document events
-ctx.documents.listen(ctx.connection);
-
-// Listen on the connection
-ctx.connection.listen();
+    ctx.ruleToFileNameMap.forEach((filePath, rule) => {
+      if (filePath === oldFilePath) {
+        ctx.ruleToFileNameMap.set(rule, newFilePath);
+      }
+    });
+  });
+});

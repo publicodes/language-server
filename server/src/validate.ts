@@ -41,7 +41,9 @@ export default async function validate(
 
     // Evaluates all the rules to get unit warning
     // PERF: with large models, this could be an issue
-    Object.keys(ctx.parsedRules).forEach((rule) => ctx.engine.evaluate(rule));
+    Object.keys(ctx.parsedRules).forEach((rule) => {
+      ctx.engine.evaluate(rule);
+    });
 
     ctx.connection.console.log(
       `[validate] Validation done for ${Object.keys(ctx.parsedRules).length} rules.`,
@@ -86,6 +88,7 @@ function getDiagnosticsLogger(ctx: LSContext): Logger {
       ctx.connection.console.log(`[publicodes:log] ${msg}`);
     },
     warn(msg: string) {
+      ctx.connection.console.log(`\n[publicodes:warn] ${msg}\n`);
       const { filePath, diagnostic } = getDiagnosticFromErrorMsg(
         ctx,
         msg,
