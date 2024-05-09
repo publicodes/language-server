@@ -1,12 +1,9 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
 import {
   createConnection,
   TextDocuments,
   ProposedFeatures,
   InitializeParams,
+  DeleteFilesParams,
 } from "vscode-languageserver/node.js";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
@@ -21,6 +18,7 @@ import onHoverHandler from "./onHover";
 import { semanticTokensFullProvider } from "./semanticTokens";
 import Engine from "publicodes";
 import { fileURLToPath } from "node:url";
+import { deleteFileFromCtx } from "./helpers";
 
 let ctx: LSContext = {
   // Create a connection for the server, using Node's IPC as a transport.
@@ -94,11 +92,10 @@ ctx.documents.onDidSave((e) => {
   validate(ctx, e.document);
 });
 
-ctx.connection.workspace.onDidDeleteFiles((e) => {
+ctx.connection.workspace.onDidDeleteFiles((e: DeleteFilesParams) => {
   e.files.forEach(({ uri }) => {
-    const filePath = fileURLToPath(uri);
-    ctx.fileInfos.delete(filePath);
-    ctx.diagnostics.delete(filePath);
+    ctx.connection.console.log(`[onDidDeleteFiles] ${uri}`);
+    deleteFileFromCtx(ctx, uri);
   });
   validate(ctx);
 });
@@ -114,19 +111,13 @@ ctx.connection.workspace.onDidRenameFiles((e) => {
       );
       return;
     }
+
     ctx.fileInfos.set(newFilePath, fileInfo);
-    ctx.fileInfos.delete(oldFilePath);
 
     const diagnostics = ctx.diagnostics.get(oldFilePath);
     if (diagnostics != undefined) {
       ctx.diagnostics.set(newFilePath, diagnostics);
-      ctx.diagnostics.delete(oldFilePath);
-      ctx.diagnosticsURI.delete(oldUri);
       ctx.diagnosticsURI.add(newUri);
-      ctx.connection.sendDiagnostics({
-        uri: oldUri,
-        diagnostics: [],
-      });
       ctx.connection.sendDiagnostics({
         uri: newUri,
         diagnostics,
@@ -138,5 +129,7 @@ ctx.connection.workspace.onDidRenameFiles((e) => {
         ctx.ruleToFileNameMap.set(rule, newFilePath);
       }
     });
+
+    deleteFileFromCtx(ctx, oldUri);
   });
 });

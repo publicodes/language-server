@@ -1,8 +1,3 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
-
 import * as path from "path";
 import {
   workspace,
@@ -47,7 +42,10 @@ export function activate(context: ExtensionContext) {
     documentSelector: [{ scheme: "file", language: "publicodes" }],
     synchronize: {
       // Notify the server about file changes to '.clientrc files contained in the workspace
-      fileEvents: workspace.createFileSystemWatcher("**/.clientrc"),
+      fileEvents: [
+        workspace.createFileSystemWatcher("**/.clientrc"),
+        workspace.createFileSystemWatcher("**/.publicodes"),
+      ],
     },
     markdown: {
       isTrusted: true,
@@ -61,6 +59,23 @@ export function activate(context: ExtensionContext) {
     serverOptions,
     clientOptions,
   );
+
+  // FIXME: only way to have a notification when a folder is deleted. Howerver,
+  // for now we only get the deleted folder, not the files inside.
+  // Consequently, we don't manage the deletion of a folder (a simple window
+  // reload is enough though).
+  // context.subscriptions.push(
+  //   workspace.onDidDeleteFiles((event: FileDeleteEvent) => {
+  //     const params: DeleteFilesParams = {
+  //       files: event.files.map((uri) => {
+  //         return {
+  //           uri: uri.toString(),
+  //         };
+  //       }),
+  //     };
+  //     client.sendNotification("workspace/didDeleteFiles", params);
+  //   }),
+  // );
 
   context.subscriptions.push(
     languages.registerDocumentSemanticTokensProvider(

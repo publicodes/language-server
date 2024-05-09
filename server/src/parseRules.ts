@@ -52,10 +52,6 @@ export function parseDocument(
   const tsTree = getTSTree(fileContent, fileInfos, document);
   const { rawRules, errors } = parseRawRules(filePath);
 
-  ctx.connection.console.log(
-    `[parseDocument] ${filePath}: errors: ${JSON.stringify(errors)}`,
-  );
-
   const ruleDefs = collectRuleDefs(tsTree).filter(
     ({ dottedName, namesPos }) => {
       const ruleFilePath = ctx.ruleToFileNameMap.get(dottedName);
