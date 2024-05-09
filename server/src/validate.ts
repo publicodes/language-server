@@ -6,6 +6,7 @@ import { parseDocument } from "./parseRules";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { Logger } from "publicodes";
 import { mapAppend, positionToRange } from "./helpers";
+import { getRefInRule } from "./treeSitter";
 
 export default async function validate(
   ctx: LSContext,
@@ -135,6 +136,33 @@ function getDiagnosticFromErrorMsg(
         message: message,
       },
     };
+  }
+
+  if (message.includes(`✖️  La référence "`)) {
+    const refName = message.match(
+      /✖️  La référence "(.*)" est introuvable/,
+    )?.[1];
+
+    if (refName) {
+      const refNode = getRefInRule(ctx, filePath, wrongRule, refName!);
+
+      if (refNode) {
+        return {
+          filePath,
+          diagnostic: {
+            severity,
+            range: positionToRange({
+              start: refNode.startPosition,
+              end: refNode.endPosition,
+            }),
+            message: `La référence "${refName}" est introuvable.
+
+[ Solution ]
+- Vérifiez que la référence "${refName}" est bien écrite.`,
+          },
+        };
+      }
+    }
   }
 
   const pos = ctx.fileInfos

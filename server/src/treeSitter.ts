@@ -1,7 +1,7 @@
-import TSParser from "tree-sitter";
+import TSParser, { Query, SyntaxNode } from "tree-sitter";
 import Publicodes from "tree-sitter-publicodes";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { FileInfos, LSContext } from "./context";
+import { DottedName, FileInfos, LSContext } from "./context";
 import { utils } from "publicodes";
 import assert from "assert";
 
@@ -83,4 +83,52 @@ export function getRuleNameAt(
   });
 
   return ruleDef?.dottedName;
+}
+
+export function getRefInRule(
+  ctx: LSContext,
+  filePath: string,
+  ruleName: DottedName,
+  refName: DottedName,
+): SyntaxNode | null {
+  const { ruleDefs, tsTree } = ctx.fileInfos.get(filePath)!;
+
+  const ruleDef = ruleDefs.find((ruleDef) => ruleDef.dottedName === ruleName);
+  if (ruleDef == undefined) {
+    return null;
+  }
+
+  let ruleNode: SyntaxNode | null = tsTree.rootNode.descendantForPosition(
+    ruleDef.defPos.start,
+  );
+  if (ruleNode == undefined) {
+    return null;
+  }
+
+  ruleNode = ruleNode.nextNamedSibling;
+  if (ruleNode == undefined || ruleNode.type !== "rule_body") {
+    return null;
+  }
+
+  return searchRefInNode(ruleNode, refName);
+}
+
+function searchRefInNode(
+  node: SyntaxNode,
+  refName: DottedName,
+): SyntaxNode | null {
+  if (node.type === "reference" && node.text === refName) {
+    return node;
+  }
+
+  let child = node.firstChild;
+  while (child) {
+    const found = searchRefInNode(child, refName);
+    if (found !== null) {
+      return found;
+    }
+    child = child.nextNamedSibling;
+  }
+
+  return null;
 }
