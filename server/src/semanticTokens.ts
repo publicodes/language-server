@@ -116,18 +116,16 @@ function collectTokens(
         break;
       }
 
+      case "avec":
       case "formule": {
-        if (node.type === "formule" && node.text === "formule") {
-          // NOTE: currently, there is multiple formule nodes, where the first one is "formule:"
-          pushToken(
-            builder,
-            node.startPosition.row,
-            node.startPosition.column,
-            node.endPosition.column - node.startPosition.column,
-            SemanticTokenTypes.keyword,
-          );
-          break;
-        }
+        pushToken(
+          builder,
+          node.startPosition.row,
+          node.startPosition.column,
+          node.endPosition.column - node.startPosition.column,
+          SemanticTokenTypes.keyword,
+        );
+        break;
       }
 
       case "number": {

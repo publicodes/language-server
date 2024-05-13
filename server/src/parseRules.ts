@@ -6,7 +6,13 @@ import TSParser from "tree-sitter";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node.js";
 import { getModelFromSource } from "@publicodes/tools/compilation";
 
-import { FilePath, LSContext, RawPublicodes, RuleDef } from "./context";
+import {
+  DottedName,
+  FilePath,
+  LSContext,
+  RawPublicodes,
+  RuleDef,
+} from "./context";
 import { getTSTree } from "./treeSitter";
 import { mapAppend, positionToRange } from "./helpers";
 
@@ -52,7 +58,7 @@ export function parseDocument(
   const tsTree = getTSTree(fileContent, fileInfos, document);
   const { rawRules, errors } = parseRawRules(filePath);
 
-  const ruleDefs = collectRuleDefs(tsTree).filter(
+  const ruleDefs = collectRuleDefs(tsTree.rootNode).filter(
     ({ dottedName, namesPos }) => {
       const ruleFilePath = ctx.ruleToFileNameMap.get(dottedName);
 
@@ -73,6 +79,15 @@ La règle '${dottedName}' est déjà définie dans le fichier : "${ruleFilePath}
       }
       return true;
     },
+  );
+
+  ctx.connection.console.log(`Parsing ${filePath}`);
+  ctx.connection.console.log(
+    `RuleDefs: ${JSON.stringify(
+      ruleDefs.map(({ dottedName }) => dottedName),
+      null,
+      2,
+    )}`,
   );
 
   ctx.fileInfos.set(filePath, {
@@ -202,22 +217,25 @@ L'attribut '${name}' doit être suivi d'une valeur.
 }
 
 /**
- * Collects all rule definitions from the tree-sitter CST
- *
- * TODO: manage imbricated rule definitions
+ * Collects all rule definitions from the tree-sitter CST.
+ * It's recursive to handle nested rules (e.g. `avec`).
  *
  * @param tsTree - The tree-sitter CST of the file
+ *
  * @return The list of rule definitions
  */
-function collectRuleDefs(tsTree: TSParser.Tree): RuleDef[] {
+function collectRuleDefs(
+  node: TSParser.SyntaxNode,
+  parentRule?: DottedName,
+): RuleDef[] {
   const rules: RuleDef[] = [];
 
-  tsTree.rootNode.children.forEach((child) => {
+  node.children.forEach((child) => {
     if (child.type === "rule") {
       let ruleNameNode = child.firstNamedChild;
       let startPos = ruleNameNode?.startPosition;
       let endPos = ruleNameNode?.endPosition;
-      let names = [];
+      let names = parentRule ? [parentRule] : [];
 
       while (ruleNameNode && ruleNameNode.type === "name") {
         names.push(ruleNameNode.text);
@@ -225,10 +243,12 @@ function collectRuleDefs(tsTree: TSParser.Tree): RuleDef[] {
         ruleNameNode = ruleNameNode.nextNamedSibling;
       }
 
+      const dottedName = names.join(" . ");
+
       if (startPos != null && endPos != null) {
         rules.push({
           names,
-          dottedName: names.join(" . "),
+          dottedName,
           namesPos: {
             start: startPos,
             end: endPos,
@@ -237,6 +257,14 @@ function collectRuleDefs(tsTree: TSParser.Tree): RuleDef[] {
             start: child.startPosition,
             end: child.endPosition,
           },
+        });
+      }
+
+      if (ruleNameNode && ruleNameNode.type === "rule_body") {
+        ruleNameNode.namedChildren.forEach((child) => {
+          if (child.type === "avec") {
+            rules.push(...collectRuleDefs(child, dottedName));
+          }
         });
       }
     }
