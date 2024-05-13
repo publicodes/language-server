@@ -35,12 +35,10 @@ export function completionResolveHandler(_ctx: LSContext) {
     }
     return {
       ...item,
-      labelDetails: item.data.labelDetails,
       documentation: {
         kind: MarkupKind.Markdown,
-        value: item.documentation,
+        value: item.data.description?.trimStart()?.trimEnd(),
       } as MarkupContent,
-      insertText: item.data.insertText,
     };
   };
 }
@@ -52,7 +50,7 @@ const getRuleCompletionItems = (
   return Object.entries(ctx.parsedRules).map(([dottedName, rule]) => {
     const { titre, description, icônes } = (rule as RuleNode).rawNode;
     const labelDetails = {
-      detail: (icônes != undefined ? ` ${icônes}` : "") + " [règle]",
+      detail: icônes != undefined ? ` ${icônes}` : "",
       description: titre,
     };
     // Remove the current rule name from the inserted text
@@ -64,42 +62,33 @@ const getRuleCompletionItems = (
     return {
       label: dottedName,
       kind: CompletionItemKind.Function,
-      documentation: description,
       labelDetails,
+      insertText,
       data: {
-        labelDetails,
-        insertText,
+        description,
       },
     };
   });
 };
 
 const mechanismsCompletionItems: CompletionItem[] = mechanisms.map((item) => {
-  const labelDetails = {
-    detail: " [mécanisme]",
-  };
   return {
     ...item,
     kind: CompletionItemKind.Property,
-    labelDetails,
+    insertText: `${item.label}:`,
     data: {
-      labelDetails,
-      insertText: `${item.label}:`,
+      description: item.documentation,
     },
   };
 });
 
 const keywordsCompletionItems: CompletionItem[] = keywords.map((item) => {
-  const labelDetails = {
-    detail: " [mot-clé]",
-  };
   return {
     ...item,
     kind: CompletionItemKind.Keyword,
-    labelDetails,
+    insertText: `${item.label}:`,
     data: {
-      labelDetails,
-      insertText: `${item.label}:`,
+      description: item.documentation,
     },
   };
 });

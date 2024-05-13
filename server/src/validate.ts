@@ -89,7 +89,6 @@ function getDiagnosticsLogger(ctx: LSContext): Logger {
       ctx.connection.console.log(`[publicodes:log] ${msg}`);
     },
     warn(msg: string) {
-      ctx.connection.console.log(`\n[publicodes:warn] ${msg}\n`);
       const { filePath, diagnostic } = getDiagnosticFromErrorMsg(
         ctx,
         msg,
