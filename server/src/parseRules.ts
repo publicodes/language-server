@@ -81,15 +81,6 @@ La règle '${dottedName}' est déjà définie dans le fichier : "${ruleFilePath}
     },
   );
 
-  ctx.connection.console.log(`Parsing ${filePath}`);
-  ctx.connection.console.log(
-    `RuleDefs: ${JSON.stringify(
-      ruleDefs.map(({ dottedName }) => dottedName),
-      null,
-      2,
-    )}`,
-  );
-
   ctx.fileInfos.set(filePath, {
     // NOTE: not needed for now (we use the parsedRules from the engine)
     ruleDefs,

@@ -62,9 +62,9 @@ export function getFullRefName(
     currentNode = currentNode.previousNamedSibling;
   }
 
-  const ruleDef = getRuleNameAt(ctx, filePath, node.startPosition.row);
+  const ruleDottedName = getRuleNameAt(ctx, filePath, node.startPosition.row);
 
-  if (ruleDef == undefined) {
+  if (ruleDottedName == undefined) {
     throw new SyntaxError(
       `No rule definition found for node at ${node.startPosition.row}:${node.startPosition.column}`,
     );
@@ -72,7 +72,7 @@ export function getFullRefName(
 
   return utils.disambiguateReference(
     ctx.parsedRules,
-    ruleDef,
+    ruleDottedName,
     ruleNames.reverse().join(" . "),
   );
 }
@@ -88,11 +88,18 @@ export function getRuleNameAt(
 
   const { ruleDefs } = ctx.fileInfos.get(filePath)!;
 
-  const ruleDef = ruleDefs.find((ruleDef) => {
-    return ruleDef.defPos.start.row <= row && ruleDef.defPos.end.row >= row;
-  });
+  // We want to get the rule definition that is the closest to the row. Indeed,
+  // with nested rules, we can have multiple definitions for the same rule
+  // name.
+  const sortedDefs = ruleDefs
+    .filter((ruleDef) => {
+      return ruleDef.defPos.start.row <= row && ruleDef.defPos.end.row >= row;
+    })
+    .sort((a, b) => {
+      return b.defPos.start.row - a.defPos.start.row;
+    });
 
-  return ruleDef?.dottedName;
+  return sortedDefs[0]?.dottedName;
 }
 
 export function getRefInRule(
