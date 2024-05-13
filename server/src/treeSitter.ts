@@ -1,4 +1,4 @@
-import TSParser, { Query, SyntaxNode } from "tree-sitter";
+import TSParser, { SyntaxNode } from "tree-sitter";
 import Publicodes from "tree-sitter-publicodes";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import { DottedName, FileInfos, LSContext } from "./context";
@@ -17,16 +17,26 @@ parser.setLanguage(Publicodes);
  * @param document - The document to get the version from
  *
  * @returns The tree-sitter tree of the document
+ *
+ * PERF: For now the tree-sitter parser is not incremental, so we parse the
+ * whole document each time. This could be optimized in the future.
+ *
+ * NOTE: We need to parse the content by chunks of (max int) length to avoid
+ * tree-sitter's buffer size limit. Due to the C API, the buffer size is
+ * limited to INT_MAX.
  */
 export function getTSTree(
   content: string,
   fileInfos: FileInfos | undefined,
   document: TextDocument | undefined,
 ): TSParser.Tree {
-  // if (fileInfos?.version && fileInfos.version === document?.version) {
-  //   return fileInfos.tsTree;
-  // }
-  return parser.parse(content);
+  const MAX_C_INT = 32_767;
+
+  return parser.parse((idx, _pos) => {
+    return idx >= content.length
+      ? null
+      : content.slice(idx, Math.min(idx + MAX_C_INT, content.length));
+  });
 }
 
 /**
