@@ -12,9 +12,6 @@ export default async function validate(
   ctx: LSContext,
   document?: TextDocument,
 ): Promise<void> {
-  // Send diagnostics which came from the parsing step of the initialization
-  sendDiagnostics(ctx);
-
   ctx.diagnostics = new Map();
 
   if (document) {

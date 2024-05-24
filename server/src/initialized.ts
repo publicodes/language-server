@@ -2,6 +2,7 @@ import { DidChangeConfigurationNotification } from "vscode-languageserver/node.j
 import { LSContext } from "./context";
 import { parseDir } from "./parseRules";
 import validate from "./validate";
+import { pathToFileURL } from "node:url";
 
 export default function intializedHandler(ctx: LSContext) {
   return () => {
@@ -23,7 +24,15 @@ export default function intializedHandler(ctx: LSContext) {
           ctx.connection.console.log(
             `[initialized] Found ${ctx.diagnostics.size} diagnostics when parsing.`,
           );
-          validate(ctx);
+          if (ctx.diagnostics.size > 0) {
+            ctx.diagnostics.forEach((diagnostics, path) => {
+              const uri = pathToFileURL(path).href;
+              ctx.diagnosticsURI.add(uri);
+              ctx.connection.sendDiagnostics({ uri, diagnostics });
+            });
+          } else {
+            validate(ctx);
+          }
         }
       });
     }

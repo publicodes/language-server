@@ -165,6 +165,9 @@ function collectTokens(
       case "sinon":
       case "alors":
       case "depuis":
+      case "dans":
+      case "source":
+      case "url":
       case "nom":
       case "les_règles":
       case "avec":
@@ -247,7 +250,6 @@ function collectTokens(
       }
 
       case "importer": {
-        ctx.connection.console.log(`Import: ${node.text}`);
         pushToken(
           builder,
           node.startPosition.row,
@@ -270,7 +272,8 @@ function collectTokens(
       }
 
       case "paragraph": {
-        ctx.connection.console.log(`Paragraph: ${node.text}`);
+        // FIXME: when the paragraph is on multiple lines, the content
+        // is not tokenized.
       }
       case "text_line":
       case "meta_value": {

@@ -54,3 +54,13 @@ export function deleteFileFromCtx(ctx: LSContext, uri: URI) {
     ctx.connection.sendDiagnostics({ uri, diagnostics: [] });
   }
 }
+
+/**
+ * Some strings are quoted in the publicodes syntax. This function removes the quotes.
+ */
+export function trimQuotedString(str: string): string {
+  const trimmed = str.trim();
+  return trimmed.startsWith('"') || trimmed.startsWith("'")
+    ? trimmed.slice(1, -1)
+    : trimmed;
+}

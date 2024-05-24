@@ -2,7 +2,7 @@ import { readFileSync, readdirSync, statSync } from "fs";
 import { join } from "path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import TSParser from "tree-sitter";
+import TSParser, { SyntaxNode } from "tree-sitter";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node.js";
 import { getModelFromSource } from "@publicodes/tools/compilation";
 
@@ -14,7 +14,7 @@ import {
   RuleDef,
 } from "./context";
 import { getTSTree } from "./treeSitter";
-import { mapAppend, positionToRange } from "./helpers";
+import { mapAppend, positionToRange, trimQuotedString } from "./helpers";
 
 const PUBLICODES_FILE_EXTENSION = ".publicodes";
 
@@ -58,7 +58,7 @@ export function parseDocument(
   const tsTree = getTSTree(fileContent, fileInfos, document);
   const { rawRules, errors } = parseRawRules(filePath);
 
-  const ruleDefs = collectRuleDefs(ctx, tsTree.rootNode).filter(
+  const ruleDefs = collectRuleDefs(tsTree.rootNode).filter(
     ({ dottedName, namesPos }) => {
       const ruleFilePath = ctx.ruleToFileNameMap.get(dottedName);
 
@@ -214,11 +214,8 @@ L'attribut '${name}' doit être suivi d'une valeur.
  * @param tsTree - The tree-sitter CST of the file
  *
  * @return The list of rule definitions
- *
- * TODO: support "importer" macro
  */
 function collectRuleDefs(
-  ctx: LSContext,
   node: TSParser.SyntaxNode,
   parentRule?: DottedName,
 ): RuleDef[] {
@@ -226,46 +223,84 @@ function collectRuleDefs(
 
   node.children.forEach((child) => {
     if (child.type === "import") {
-    }
-    if (child.type === "rule") {
-      const ruleNameNode = child.childForFieldName("rule_name");
-      if (!ruleNameNode || ruleNameNode.type !== "dotted_name") {
-        return;
-      }
+      const packageName = resolvePackageName(child);
 
-      const names = parentRule ? [parentRule] : [];
-
-      ruleNameNode?.children.forEach((child) => {
-        if (child.type === "name") {
-          names.push(child.text);
+      child.childForFieldName("rules")?.namedChildren.forEach((rule) => {
+        if (rule.type === "rule" || rule.type === "import_rule") {
+          rules.push(...getRuleDefsInRule(rule, packageName));
         }
       });
-
-      const dottedName = names.join(" . ");
-
-      rules.push({
-        names,
-        dottedName,
-        namesPos: {
-          start: ruleNameNode.startPosition,
-          end: ruleNameNode.endPosition,
-        },
-        defPos: {
-          start: child.startPosition,
-          end: child.endPosition,
-        },
-      });
-
-      const bodyNode = child.childForFieldName("rule_body");
-      if (bodyNode && bodyNode.type === "rule_body") {
-        bodyNode.namedChildren.forEach((child) => {
-          if (child.type === "avec") {
-            rules.push(...collectRuleDefs(ctx, child, dottedName));
-          }
-        });
-      }
+    } else if (child.type === "rule") {
+      rules.push(...getRuleDefsInRule(child, parentRule));
     }
   });
 
   return rules;
+}
+
+function getRuleDefsInRule(
+  rule: SyntaxNode,
+  parentRule?: DottedName,
+): RuleDef[] {
+  const rules: RuleDef[] = [];
+
+  const ruleNameNode = rule.childForFieldName("rule_name");
+  if (!ruleNameNode || ruleNameNode.type !== "dotted_name") {
+    return [];
+  }
+
+  const names = parentRule ? [parentRule] : [];
+
+  ruleNameNode?.children.forEach((child) => {
+    if (child.type === "name") {
+      names.push(child.text);
+    }
+  });
+
+  const dottedName = names.join(" . ");
+
+  rules.push({
+    names,
+    dottedName,
+    namesPos: {
+      start: ruleNameNode.startPosition,
+      end: ruleNameNode.endPosition,
+    },
+    defPos: {
+      start: rule.startPosition,
+      end: rule.endPosition,
+    },
+  });
+
+  const bodyNode = rule.childForFieldName("rule_body");
+  if (bodyNode && bodyNode.type === "rule_body") {
+    bodyNode.namedChildren.forEach((child) => {
+      if (child.type === "avec") {
+        rules.push(...collectRuleDefs(child, dottedName));
+      }
+    });
+  }
+
+  return rules;
+}
+
+/**
+ * When resolving the `importer!` macro, rules are imported in a new parent
+ * namespace. This new parent namespace is either the package name or if
+ * defined, the content of the `dans` (into) node.
+ */
+function resolvePackageName(node: SyntaxNode): string {
+  const into = node.childForFieldName("into");
+  if (into) {
+    return trimQuotedString(into.text);
+  }
+
+  // The package name is required
+  const name = node.childForFieldName("from")?.childForFieldName("name")!.text!;
+  const trimmedName = trimQuotedString(name);
+
+  return trimmedName.startsWith("@")
+    ? // Scoped package
+      trimmedName.split("/")[1]
+    : trimmedName;
 }
