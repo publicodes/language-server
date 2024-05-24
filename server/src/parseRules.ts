@@ -58,7 +58,7 @@ export function parseDocument(
   const tsTree = getTSTree(fileContent, fileInfos, document);
   const { rawRules, errors } = parseRawRules(filePath);
 
-  const ruleDefs = collectRuleDefs(tsTree.rootNode).filter(
+  const ruleDefs = collectRuleDefs(ctx, tsTree.rootNode).filter(
     ({ dottedName, namesPos }) => {
       const ruleFilePath = ctx.ruleToFileNameMap.get(dottedName);
 
@@ -214,47 +214,53 @@ L'attribut '${name}' doit être suivi d'une valeur.
  * @param tsTree - The tree-sitter CST of the file
  *
  * @return The list of rule definitions
+ *
+ * TODO: support "importer" macro
  */
 function collectRuleDefs(
+  ctx: LSContext,
   node: TSParser.SyntaxNode,
   parentRule?: DottedName,
 ): RuleDef[] {
   const rules: RuleDef[] = [];
 
   node.children.forEach((child) => {
+    if (child.type === "import") {
+    }
     if (child.type === "rule") {
-      let ruleNameNode = child.firstNamedChild;
-      let startPos = ruleNameNode?.startPosition;
-      let endPos = ruleNameNode?.endPosition;
-      let names = parentRule ? [parentRule] : [];
-
-      while (ruleNameNode && ruleNameNode.type === "name") {
-        names.push(ruleNameNode.text);
-        endPos = ruleNameNode.endPosition;
-        ruleNameNode = ruleNameNode.nextNamedSibling;
+      const ruleNameNode = child.childForFieldName("rule_name");
+      if (!ruleNameNode || ruleNameNode.type !== "dotted_name") {
+        return;
       }
+
+      const names = parentRule ? [parentRule] : [];
+
+      ruleNameNode?.children.forEach((child) => {
+        if (child.type === "name") {
+          names.push(child.text);
+        }
+      });
 
       const dottedName = names.join(" . ");
 
-      if (startPos != null && endPos != null) {
-        rules.push({
-          names,
-          dottedName,
-          namesPos: {
-            start: startPos,
-            end: endPos,
-          },
-          defPos: {
-            start: child.startPosition,
-            end: child.endPosition,
-          },
-        });
-      }
+      rules.push({
+        names,
+        dottedName,
+        namesPos: {
+          start: ruleNameNode.startPosition,
+          end: ruleNameNode.endPosition,
+        },
+        defPos: {
+          start: child.startPosition,
+          end: child.endPosition,
+        },
+      });
 
-      if (ruleNameNode && ruleNameNode.type === "rule_body") {
-        ruleNameNode.namedChildren.forEach((child) => {
+      const bodyNode = child.childForFieldName("rule_body");
+      if (bodyNode && bodyNode.type === "rule_body") {
+        bodyNode.namedChildren.forEach((child) => {
           if (child.type === "avec") {
-            rules.push(...collectRuleDefs(child, dottedName));
+            rules.push(...collectRuleDefs(ctx, child, dottedName));
           }
         });
       }

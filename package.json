@@ -72,7 +72,7 @@
     },
     "configuration": {
       "type": "object",
-      "title": "Example configuration",
+      "title": "Publicodes",
       "properties": {
         "languageServerExample.maxNumberOfProblems": {
           "scope": "resource",

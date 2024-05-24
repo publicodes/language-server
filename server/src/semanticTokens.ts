@@ -26,7 +26,26 @@ export function semanticTokensFullProvider(ctx: LSContext) {
   };
 }
 
-const operators = ["+", "-", "*", "/", "%", ">", "<", ">=", "<=", "==", "!="];
+const punctuations = [
+  '"',
+  "'",
+  ".",
+  ":",
+  "(",
+  ")",
+  "+",
+  "-",
+  "*",
+  "/",
+  "%",
+  ">",
+  "<",
+  "=",
+  ">=",
+  "<=",
+  "==",
+  "!=",
+];
 
 function collectTokens(
   ctx: LSContext,
@@ -36,24 +55,35 @@ function collectTokens(
   node.children.forEach((node) => {
     switch (node.type) {
       case "rule": {
-        let ruleNameNode = node.firstNamedChild;
-        while (ruleNameNode && ruleNameNode.type === "name") {
-          const tokenType = ruleNameNode.nextNamedSibling
-            ? ruleNameNode.nextNamedSibling.type !== "name"
-              ? SemanticTokenTypes.variable
-              : SemanticTokenTypes.namespace
-            : SemanticTokenTypes.namespace;
+        const dottedName = node.childForFieldName("rule_name");
+        if (!dottedName) {
+          break;
+        }
+
+        const isNamespace =
+          node.childForFieldName("rule_body")?.childCount === 0;
+        const ruleLength = dottedName.childCount;
+
+        dottedName.children.forEach((name, index) => {
+          const tokenType =
+            name.type === "name"
+              ? isNamespace
+                ? SemanticTokenTypes.namespace
+                : index === ruleLength - 1
+                  ? SemanticTokenTypes.function
+                  : SemanticTokenTypes.namespace
+              : SemanticTokenTypes.operator;
 
           pushToken(
             builder,
-            ruleNameNode.startPosition.row,
-            ruleNameNode.startPosition.column,
-            ruleNameNode.endPosition.column - ruleNameNode.startPosition.column,
+            name.startPosition.row,
+            name.startPosition.column,
+            name.endPosition.column - name.startPosition.column,
             tokenType,
             [SemanticTokenModifiers.definition],
           );
-          ruleNameNode = ruleNameNode.nextNamedSibling;
-        }
+        });
+
         break;
       }
 
@@ -76,28 +106,41 @@ function collectTokens(
           node.startPosition.column,
           node.endPosition.column - node.startPosition.column,
           SemanticTokenTypes.type,
+          [SemanticTokenModifiers.readonly],
         );
         break;
       }
 
+      case "s_formule":
+      case "s_avec":
+      case "s_remplace":
+      case "m_une_possibilité":
       case "m_contexte":
       case "m_inversion":
+      case "m_variations":
       case "m_array":
-      case "m_unary": {
+      case "m_unary":
+      case "m_unité":
+      case "m_durée":
+      case "m_barème_like":
+      case "m_texte": {
         if (!node.firstChild) {
           break;
         }
 
-        const { startPosition, endPosition } = node.firstChild;
+        const { startPosition, endPosition } =
+          node.childForFieldName("m_name")!;
 
         pushToken(
           builder,
           startPosition.row,
           startPosition.column,
           endPosition.column - startPosition.column,
-          SemanticTokenTypes.keyword,
+          SemanticTokenTypes.property,
+          [SemanticTokenModifiers.static],
         );
 
+        // Manage the `unité` mechanism
         if (node.type === "m_unary" && node.firstChild.type === "unité") {
           // node.children: ["unité", ":", ...]
           for (let i = 2; i < node.childCount; i++) {
@@ -116,6 +159,14 @@ function collectTokens(
         break;
       }
 
+      case "choix_obligatoire":
+      case "possibilités":
+      case "si":
+      case "sinon":
+      case "alors":
+      case "depuis":
+      case "nom":
+      case "les_règles":
       case "avec":
       case "formule": {
         pushToken(
@@ -145,26 +196,6 @@ function collectTokens(
         break;
       }
 
-      case "reference": {
-        // TODO: to factorize
-        let ruleNameNode = node.firstNamedChild;
-        while (ruleNameNode && ruleNameNode.type === "name") {
-          const tokenType = ruleNameNode.nextNamedSibling
-            ? SemanticTokenTypes.namespace
-            : SemanticTokenTypes.variable;
-
-          pushToken(
-            builder,
-            ruleNameNode.startPosition.row,
-            ruleNameNode.startPosition.column,
-            ruleNameNode.endPosition.column - ruleNameNode.startPosition.column,
-            tokenType,
-          );
-          ruleNameNode = ruleNameNode.nextNamedSibling;
-        }
-        break;
-      }
-
       case "boolean": {
         pushToken(
           builder,
@@ -176,7 +207,47 @@ function collectTokens(
         break;
       }
 
-      case "somme": {
+      case "string": {
+        pushToken(
+          builder,
+          node.startPosition.row,
+          node.startPosition.column,
+          node.endPosition.column - node.startPosition.column,
+          SemanticTokenTypes.enumMember,
+          [SemanticTokenModifiers.readonly],
+        );
+        break;
+      }
+
+      case "import_rule":
+      case "reference": {
+        const dottedName = node.firstNamedChild;
+        if (!dottedName) {
+          break;
+        }
+
+        const refLength = dottedName.childCount;
+        node.firstNamedChild?.children.forEach((name, index) => {
+          const tokenType =
+            name.type === "name"
+              ? index === refLength - 1
+                ? SemanticTokenTypes.function
+                : SemanticTokenTypes.namespace
+              : SemanticTokenTypes.operator;
+
+          pushToken(
+            builder,
+            name.startPosition.row,
+            name.startPosition.column,
+            name.endPosition.column - name.startPosition.column,
+            tokenType,
+          );
+        });
+        break;
+      }
+
+      case "importer": {
+        ctx.connection.console.log(`Import: ${node.text}`);
         pushToken(
           builder,
           node.startPosition.row,
@@ -187,8 +258,47 @@ function collectTokens(
         break;
       }
 
+      case "meta_name": {
+        pushToken(
+          builder,
+          node.startPosition.row,
+          node.startPosition.column,
+          node.endPosition.column - node.startPosition.column,
+          SemanticTokenTypes.property,
+        );
+        break;
+      }
+
+      case "paragraph": {
+        ctx.connection.console.log(`Paragraph: ${node.text}`);
+      }
+      case "text_line":
+      case "meta_value": {
+        pushToken(
+          builder,
+          node.startPosition.row,
+          node.startPosition.column,
+          node.endPosition.column - node.startPosition.column,
+          SemanticTokenTypes.string,
+        );
+        break;
+      }
+
+      case "unit": {
+        pushToken(
+          builder,
+          node.startPosition.row,
+          node.startPosition.column,
+          node.endPosition.column - node.startPosition.column,
+          SemanticTokenTypes.type,
+        );
+        break;
+      }
+
+      // FIXME: expression tokens like `+`, `-`, `*`, `/`, etc. are not shown
+      // in the syntax tree.
       default: {
-        if (operators.includes(node.type.trim())) {
+        if (punctuations.includes(node.type.trim())) {
           pushToken(
             builder,
             node.startPosition.row,
@@ -196,6 +306,8 @@ function collectTokens(
             node.endPosition.column - node.startPosition.column,
             SemanticTokenTypes.operator,
           );
+        } else {
+          // ctx.connection.console.log(`Unknown node type: ${node.type}`);
         }
       }
     }
@@ -205,28 +317,29 @@ function collectTokens(
 }
 
 export const tokenTypes = [
-  SemanticTokenTypes.operator,
-  SemanticTokenTypes.struct,
   SemanticTokenTypes.class,
+  SemanticTokenTypes.comment,
+  SemanticTokenTypes.decorator,
   SemanticTokenTypes.enumMember,
   SemanticTokenTypes.function,
+  SemanticTokenTypes.method,
+  SemanticTokenTypes.keyword,
   SemanticTokenTypes.macro,
   SemanticTokenTypes.namespace,
   SemanticTokenTypes.number,
-  SemanticTokenTypes.string,
-  SemanticTokenTypes.variable,
-  SemanticTokenTypes.comment,
+  SemanticTokenTypes.operator,
   SemanticTokenTypes.property,
+  SemanticTokenTypes.string,
+  SemanticTokenTypes.struct,
   SemanticTokenTypes.type,
-  SemanticTokenTypes.decorator,
-  SemanticTokenTypes.keyword,
+  SemanticTokenTypes.variable,
 ];
 
 export const tokenModifiers = [
-  SemanticTokenModifiers.readonly,
-  SemanticTokenModifiers.documentation,
-  SemanticTokenModifiers.definition,
   SemanticTokenModifiers.declaration,
+  SemanticTokenModifiers.definition,
+  SemanticTokenModifiers.documentation,
+  SemanticTokenModifiers.readonly,
   SemanticTokenModifiers.static,
 ];
 
