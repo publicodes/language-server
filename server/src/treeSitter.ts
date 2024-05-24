@@ -4,6 +4,7 @@ import { TextDocument } from "vscode-languageserver-textdocument";
 import { DottedName, FileInfos, LSContext } from "./context";
 import { utils } from "publicodes";
 import assert from "assert";
+import { trimQuotedString } from "./helpers";
 
 const parser = new TSParser();
 parser.setLanguage(Publicodes);
@@ -73,7 +74,7 @@ export function getFullRefName(
   return utils.disambiguateReference(
     ctx.parsedRules,
     ruleDottedName,
-    ruleNames.reverse().join(" . "),
+    trimQuotedString(ruleNames.reverse().join(" . ")),
   );
 }
 

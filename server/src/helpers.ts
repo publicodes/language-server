@@ -57,6 +57,9 @@ export function deleteFileFromCtx(ctx: LSContext, uri: URI) {
 
 /**
  * Some strings are quoted in the publicodes syntax. This function removes the quotes.
+ *
+ * NOTE: the neccessity of this function can be considered a bug in the
+ * tree-sitter grammar.
  */
 export function trimQuotedString(str: string): string {
   const trimmed = str.trim();
