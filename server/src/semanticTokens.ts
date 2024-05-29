@@ -209,6 +209,7 @@ function collectTokens(
         break;
       }
 
+      case "date":
       case "boolean": {
         pushToken(
           builder,
