@@ -32,20 +32,25 @@ export default async function validate(
       };
     });
 
+    let startTimer = Date.now();
     ctx.engine = new Engine(ctx.rawPublicodesRules, {
       logger: getDiagnosticsLogger(ctx),
     });
+    ctx.connection.console.log(
+      `[validate] Engine created in ${Date.now() - startTimer}ms.`,
+    );
     ctx.parsedRules = ctx.engine.getParsedRules();
 
+    startTimer = Date.now();
     // Evaluates all the rules to get unit warning
-    // PERF: with large models, this could be an issue
+    // PERF: this took ~1500ms for 2009 rules, this needs to be optimized
     Object.keys(ctx.parsedRules).forEach((rule) => {
       ctx.engine.evaluate(rule);
     });
-
     ctx.connection.console.log(
-      `[validate] Validation done for ${Object.keys(ctx.parsedRules).length} rules.`,
+      `[validate] Rules evaluated in ${Date.now() - startTimer}ms (${Object.keys(ctx.parsedRules).length} rules).`,
     );
+
     // Remove previous diagnostics
     ctx.diagnosticsURI.forEach((uri) => {
       ctx.connection.sendDiagnostics({ uri, diagnostics: [] });

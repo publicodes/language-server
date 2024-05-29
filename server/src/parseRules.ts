@@ -272,10 +272,11 @@ function getRuleDefsInRule(
     },
   });
 
-  const bodyNode = rule.childForFieldName("rule_body");
+  const bodyNode = rule.childForFieldName("body");
+
   if (bodyNode && bodyNode.type === "rule_body") {
     bodyNode.namedChildren.forEach((child) => {
-      if (child.type === "avec") {
+      if (child.type === "s_avec") {
         rules.push(...collectRuleDefs(child, dottedName));
       }
     });

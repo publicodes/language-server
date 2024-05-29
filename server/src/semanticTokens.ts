@@ -159,6 +159,16 @@ function collectTokens(
         break;
       }
 
+      case "assiette":
+      case "tranches":
+      case "taux":
+      case "multiplicateur":
+      case "plafond":
+      case "arrondi":
+      case "montant":
+      case "dans":
+      case "références_à":
+      case "sauf_dans":
       case "choix_obligatoire":
       case "possibilités":
       case "si":
