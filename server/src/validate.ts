@@ -15,8 +15,6 @@ export default async function validate(
   ctx.diagnostics = new Map();
 
   if (document) {
-    // Parse the document only if it has changed (not needed when a file is
-    // deleted for example)
     const docFilePath = fileURLToPath(document.uri);
     parseDocument(ctx, docFilePath, document);
   }

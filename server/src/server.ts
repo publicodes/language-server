@@ -19,6 +19,7 @@ import { semanticTokensFullProvider } from "./semanticTokens";
 import Engine from "publicodes";
 import { fileURLToPath } from "node:url";
 import { deleteFileFromCtx } from "./helpers";
+import { parseDocument } from "./parseRules";
 
 let ctx: LSContext = {
   // Create a connection for the server, using Node's IPC as a transport.
@@ -90,6 +91,10 @@ ctx.documents.onDidClose((e) => {
 
 ctx.documents.onDidSave((e) => {
   validate(ctx, e.document);
+});
+
+ctx.documents.onDidChangeContent((e) => {
+  parseDocument(ctx, fileURLToPath(e.document.uri), e.document);
 });
 
 ctx.connection.workspace.onDidDeleteFiles((e: DeleteFilesParams) => {
