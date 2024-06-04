@@ -30,7 +30,8 @@
     "postinstall": "yarn install --cwd client && yarn install --cwd server",
     "test": "sh ./scripts/e2e.sh",
     "format": "prettier --write .",
-    "format:check": "prettier --check . server client"
+    "format:check": "prettier --check . server client",
+    "postversion": "git push --tags && git push"
   },
   "activationEvents": [
     "onLanguage:publicodes"
