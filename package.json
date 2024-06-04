@@ -28,7 +28,9 @@
     "dev": "concurrently \"tsc -b -w\" \"tsc-alias -p server/tsconfig.json -w\"",
     "lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
     "postinstall": "yarn install --cwd client && yarn install --cwd server",
-    "test": "sh ./scripts/e2e.sh"
+    "test": "sh ./scripts/e2e.sh",
+    "format": "prettier --write .",
+    "format:check": "prettier --check . server client"
   },
   "activationEvents": [
     "onLanguage:publicodes"
@@ -104,6 +106,7 @@
     "concurrently": "^8.2.2",
     "eslint": "^8.35.0",
     "mocha": "^9.2.1",
+    "prettier": "^3.3.0",
     "tsc-alias": "^1.8.8",
     "tsup": "^8.0.2",
     "typescript": "^5.0.2"

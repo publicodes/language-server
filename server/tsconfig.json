@@ -1,28 +1,21 @@
 {
-	"compilerOptions": {
-		"module": "esnext",
-		"moduleResolution": "node",
-		"esModuleInterop": true,
-		"allowSyntheticDefaultImports": true,
-		"target": "es2021",
-		"lib": [
-			"es2021"
-		],
-		"outDir": "out",
-		"rootDir": "src",
-		"sourceMap": true,
-		"composite": true,
-		"incremental": true,
-		"strict": true
-	},
-	"tsc-alias": {
-		"resolveFullPaths": true
-	},
-	"include": [
-		"src"
-	],
-	"exclude": [
-		"node_modules",
-		".vscode-test"
-	]
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "es2021",
+    "lib": ["es2021"],
+    "outDir": "out",
+    "rootDir": "src",
+    "sourceMap": true,
+    "composite": true,
+    "incremental": true,
+    "strict": true
+  },
+  "tsc-alias": {
+    "resolveFullPaths": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", ".vscode-test"]
 }

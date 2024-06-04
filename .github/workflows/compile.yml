@@ -1,0 +1,24 @@
+name: Build, test and check format
+
+on: push
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          cache: yarn
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build package
+        run: yarn compile
+
+      # TODO: Uncomment the following lines if you have tests
+      # - name: Test the package
+      #   run: yarn test
+
+      - name: Check file formatting
+        run: yarn format:check
