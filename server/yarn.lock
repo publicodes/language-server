@@ -2,13 +2,13 @@
 # yarn lockfile v1
 
 
-"@publicodes/tools@^1.0.7":
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/@publicodes/tools/-/tools-1.0.7.tgz#abbe817b68df24e0148eebcda7dd4260de3731e8"
-  integrity sha512-mf1BLetTRg+C+yfJgXp6I5xd3P8lIl+L/4ZHmhAZ/uW4GDWeJAargzdLlQPyXHNYiad3n/rm/nhwrze1Gvj1XQ==
+"@publicodes/tools@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@publicodes/tools/-/tools-1.2.0.tgz#7cf6315f5ac6d5e4c96e03e7a7dbccc0bcced72b"
+  integrity sha512-QkqkFSWXG//BEz+2nKx973uWgpzkf4iH4cGjYnGzMzR157IUd4z8+U8nofBUa1FqlJXZij3omvv60H9xS6nUQA==
   dependencies:
     "@types/node" "^18.11.18"
-    publicodes "^1.1.1"
+    publicodes "^1.3.0"
 
 "@types/node@^18.11.18":
   version "18.19.31"
@@ -55,10 +55,10 @@ process@^0.11.1:
   resolved "https://registry.yarnpkg.com/process/-/process-0.11.10.tgz#7332300e840161bda3e69a1d1d91a7d4bc16f182"
   integrity sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A==
 
-publicodes@^1.1.1, publicodes@^1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/publicodes/-/publicodes-1.2.0.tgz#2856891da07633315eff419402bb61109045504d"
-  integrity sha512-qit3KsTqwZct5Xt6uyJ83yXNXxxScKuSRvemUgCRWEczP/mPAX/tiDQUgwwOC2fDoiCuQuZ9EiQwU5HfzHFIJQ==
+publicodes@^1.3.0, publicodes@^1.3.1:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/publicodes/-/publicodes-1.3.1.tgz#b30e5e82cdfafd38c00fb6432ceac66f4bff5f58"
+  integrity sha512-By464NDaCc3fwRgq6BDMqoyYiapcRCBiFuQsF1ctazOoxtJ3SVXb0AVsIHMPqKFFj5elhD/8IljF7iqQqDDZxA==
 
 tree-sitter-publicodes@^0.1.2:
   version "0.1.2"
