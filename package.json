@@ -1,102 +1,109 @@
 {
-	"name": "publicodes-language-server",
-	"description": "Publicodes language toolkit",
-	"displayName": "Publicodes language",
-	"icon": "icons/publicodes-logo.png",
-	"author": "Emile Rolley <emile.rolley@tuta.io>",
-	"license": "MIT",
-	"version": "0.4.1",
-	"publisher": "EmileRolley",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/EmileRolley/publicodes-language-server.git"
-	},
-	"categories": [],
-	"keywords": [
-		"publicodes",
-		"language server",
-		"vscode"
-	],
-	"engines": {
-		"vscode": "^1.75.0"
-	},
-	"main": "./client/out/extension",
-	"contributes": {
-		"languages": [
-			{
-				"id": "publicodes",
-				"aliases": [
-					"Publicodes"
-				],
-				"extensions": [
-					".publi.yml",
-					".publicodes.yml",
-					".publi.yaml",
-					".publicodes.yaml",
-					".publi",
-					".publicodes"
-				],
-				"configuration": "./language-configuration.json",
-				"icon": {
-					"light": "./icons/publicodes-logo.png",
-					"dark": "./icons/publicodes-logo.png"
-				}
-			}
-		],
-		"grammars": [
-			{
-				"language": "publicodes",
-				"scopeName": "source.publicodes",
-				"path": "./syntaxes/publicodes.tmLanguage.json"
-			}
-		],
-		"configurationDefaults": {
-			"[publicodes]": {
-				"editor.insertSpaces": true,
-				"editor.tabSize": 2,
-				"editor.autoIndent": "advanced",
-				"diffEditor.ignoreTrimWhitespace": false
-			}
-		},
-		"configuration": {
-			"type": "object",
-			"title": "Example configuration",
-			"properties": {
-				"languageServerExample.maxNumberOfProblems": {
-					"scope": "resource",
-					"type": "number",
-					"default": 100,
-					"description": "Controls the maximum number of problems produced by the server."
-				},
-				"languageServerExample.trace.server": {
-					"scope": "window",
-					"type": "string",
-					"enum": [
-						"off",
-						"messages",
-						"verbose"
-					],
-					"default": "off",
-					"description": "Traces the communication between VS Code and the language server."
-				}
-			}
-		}
-	},
-	"scripts": {
-		"vscode:prepublish": "npm run compile",
-		"compile": "tsc -b",
-		"watch": "tsc -b -w",
-		"lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
-		"postinstall": "cd client && npm install && cd ../server && npm install && cd ..",
-		"test": "sh ./scripts/e2e.sh"
-	},
-	"devDependencies": {
-		"@types/mocha": "^9.1.0",
-		"@types/node": "^16.11.7",
-		"@typescript-eslint/eslint-plugin": "^5.54.0",
-		"@typescript-eslint/parser": "^5.54.0",
-		"eslint": "^8.35.0",
-		"mocha": "^9.2.1",
-		"typescript": "^5.0.2"
-	}
+  "name": "publicodes-language-server",
+  "description": "Publicodes language toolkit",
+  "displayName": "Publicodes language",
+  "icon": "icons/publicodes-logo.png",
+  "author": "Emile Rolley <emile.rolley@tuta.io>",
+  "license": "MIT",
+  "version": "0.4.1",
+  "publisher": "EmileRolley",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EmileRolley/publicodes-language-server.git"
+  },
+  "categories": [],
+  "keywords": [
+    "publicodes",
+    "language server",
+    "vscode"
+  ],
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "main": "./client/out/extension",
+  "scripts": {
+    "vscode:prepublish": "compile",
+    "compile": "tsc -b && tsc-alias -p server/tsconfig.json",
+    "dev": "concurrently \"tsc -b -w\" \"tsc-alias -p server/tsconfig.json -w\"",
+    "lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
+    "postinstall": "yarn install --cwd client && yarn install --cwd server",
+    "test": "sh ./scripts/e2e.sh"
+  },
+  "activationEvents": [
+    "onLanguage:publicodes"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "publicodes",
+        "aliases": [
+          "Publicodes"
+        ],
+        "extensions": [
+          ".publicodes"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/publicodes-logo.png",
+          "dark": "./icons/publicodes-logo.png"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "publicodes",
+        "scopeName": "source.publicodes",
+        "path": "./syntaxes/publicodes.tmLanguage.json"
+      }
+    ],
+    "configurationDefaults": {
+      "[publicodes]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2,
+        "editor.autoIndent": "advanced",
+        "editor.quickSuggestions": {
+          "other": true,
+          "comments": true,
+          "strings": true
+        },
+        "editor.semanticHighlight.enable": true,
+        "diffEditor.ignoreTrimWhitespace": false
+      }
+    },
+    "configuration": {
+      "type": "object",
+      "title": "Publicodes",
+      "properties": {
+        "languageServerExample.maxNumberOfProblems": {
+          "scope": "resource",
+          "type": "number",
+          "default": 100,
+          "description": "Controls the maximum number of problems produced by the server."
+        },
+        "languageServerExample.trace.server": {
+          "scope": "window",
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VS Code and the language server."
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "@types/mocha": "^9.1.0",
+    "@types/node": "^16.11.7",
+    "@typescript-eslint/eslint-plugin": "^5.54.0",
+    "@typescript-eslint/parser": "^5.54.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.35.0",
+    "mocha": "^9.2.1",
+    "tsc-alias": "^1.8.8",
+    "tsup": "^8.0.2",
+    "typescript": "^5.0.2"
+  }
 }

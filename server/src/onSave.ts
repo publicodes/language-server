@@ -1,4 +1,4 @@
-import { DidSaveTextDocumentParams } from "vscode-languageserver/node";
+import { DidSaveTextDocumentParams } from "vscode-languageserver/node.js";
 import validate from "./validate";
 import { LSContext } from "./context";
 

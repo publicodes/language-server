@@ -1,11 +1,10 @@
-import { CompletionItem } from "vscode-languageserver/node";
+import { CompletionItem } from "vscode-languageserver/node.js";
 
 // TODO: auto-generate this from https://raw.githubusercontent.com/betagouv/publicodes/master/website/docs/api/m%C3%A9canismes.mdx
 export const mechanisms: CompletionItem[] = [
   {
     label: "applicable si",
-    documentation: `
-# applicable si
+    documentation: `# applicable si
 
 > **Mécanisme chainable** ([plus d’infos](/docs/principes-de-base#mécanismes-chaînés))
 
@@ -20,14 +19,11 @@ ancienneté: 4 mois
 prime de vacances:
   applicable si: ancienneté >= 1 an
   valeur: 200€
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "non applicable si",
-    documentation: `
-## non applicable si
+    documentation: `## non applicable si
 
 > **Mécanisme chainable** ([plus d’infos](/docs/principes-de-base#mécanismes-chaînés)) 
 
@@ -42,14 +38,11 @@ ancienneté: 4 mois
 prime de vacances:
   non applicable si: ancienneté < 1 an
   valeur: 200€
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "est non défini",
-    documentation: `
-## est non défini
+    documentation: `## est non défini
 
 Renvoit \`oui\` si la valeur est non définie.
 
@@ -59,14 +52,11 @@ Renvoit \`oui\` si la valeur est non définie.
 age:
 age inconnu:
   est non défini: age
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "est défini",
-    documentation: `
-## est défini
+    documentation: `## est défini
 
 Renvoit \`oui\` si la valeur est définie.
 
@@ -76,14 +66,11 @@ Renvoit \`oui\` si la valeur est définie.
 age: 15 ans
 age connu:
   est défini: age
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "est non applicable",
-    documentation: `
-## est non applicable
+    documentation: `## est non applicable
 
 Renvoit \`oui\` si la valeur est non applicable.
 
@@ -98,14 +85,11 @@ exonérations . lodeom: non
 
 lodeom non applicable:
   est non applicable: exonérations . lodeom
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "est applicable",
-    documentation: `
-## est applicable
+    documentation: `## est applicable
 
 Renvoit \`oui\` si la valeur est applicable.
 
@@ -120,14 +104,11 @@ exonérations . lodeom: non
 
 lodeom applicable:
   est applicable: exonérations . lodeom
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "une de ces conditions",
-    documentation: `
-## une de ces conditions
+    documentation: `## une de ces conditions
 
 Renvoie \`oui\` si l’une des règles listées est _applicable_.
 
@@ -142,14 +123,11 @@ est majeur:
   une de ces conditions:
     - âge >= 18 ans
     - mineur émancipé
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "toutes ces conditions",
-    documentation: `
-## toutes ces conditions
+    documentation: `## toutes ces conditions
 
 Renvoie \`oui\` si toutes toutes les règles listées sont _applicables_.
 
@@ -164,14 +142,11 @@ peut voter:
   toutes ces conditions:
     - citoyenneté française
     - âge >= 18 ans
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "produit",
-    documentation: `
-## produit
+    documentation: `## produit
 
 C’est une multiplication adaptée pour exprimer au mieux les cotisations.
 
@@ -200,13 +175,11 @@ cotisation:
   produit:
     assiette: 2000 €/mois
     taux: 5%
-\`\`\`
-`,
+\`\`\``,
   },
   {
     label: "produit",
-    documentation: `
-## produit
+    documentation: `## produit
 
 C’est une multiplication adaptée pour exprimer au mieux les cotisations.
 
@@ -247,14 +220,11 @@ chômage:
     assiette: assiette cotisation
     plafond: 400% * plafond sécurité sociale
     taux: 4%
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "variations",
-    documentation: `
-## variations
+    documentation: `## variations
 
 Contient une liste de conditions (\`si\`) et leurs conséquences associées
 (\`alors\`), ainsi qu’un cas par défaut (\`sinon\`).
@@ -303,14 +273,11 @@ allocation familiales:
         taux: 3.45%
     - sinon:
         taux: 5.25%
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "somme",
-    documentation: `
-## somme
+    documentation: `## somme
 
 Somme de chaque terme de la liste.
 
@@ -341,14 +308,11 @@ somme:
     - a
     - b
     - 40 €
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "moyenne",
-    documentation: `
-## moyenne
+    documentation: `## moyenne
 
 Moyenne de chaque terme de la liste.
 
@@ -377,14 +341,11 @@ moyenne:
     - a
     - b
     - 40 €
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "le maximum de",
-    documentation: `
-## le maximum de
+    documentation: `## le maximum de
 
 Renvoie la valeur numérique de la liste de propositions fournie qui est la
 plus grande.
@@ -399,14 +360,11 @@ max:
   le maximum de:
     - 50
     - 100
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "le minimum de",
-    documentation: `
-## le minimum de
+    documentation: `## le minimum de
 
 Renvoie la valeur numérique de la liste de propositions fournie qui est la
 plus petite.
@@ -420,14 +378,11 @@ min:
   le minimum de:
     - 50
     - 100
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "le minimum de",
-    documentation: `
-## arrondi
+    documentation: `## arrondi
 
 > **Mécanisme chainable** ([plus d’infos](/docs/principes-de-base#mécanismes-chaînés))
 
@@ -447,14 +402,11 @@ arrondi:
 arrondi:
   arrondi: 2 décimales
   valeur: 2 / 3
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "recalcul",
-    documentation: `
-## recalcul
+    documentation: `## recalcul
 
 Relance le calcul d’une règle dans une situation différente de la situation
 courante. Permet par exemple de calculer le montant des cotisations au niveau du
@@ -477,14 +429,11 @@ cotisations pour un SMIC:
     règle: cotisations
     avec:
       brut: 1500 €
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "barème",
-    documentation: `
-## barème
+    documentation: `## barème
 
 par son utilisation dans le calcul de l’impôt sur le revenu.
 
@@ -530,14 +479,11 @@ cotisation retraite:
         plafond: 1
       - taux: 0.6%
   arrondi: oui
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "grille",
-    documentation: `
-## grille
+    documentation: `## grille
 
 C’est un barème sous la forme d’une grille de correspondance simple. C’est
 le mécanisme de calcul de l’impôt neutre, aussi appelé impôt non
@@ -565,15 +511,11 @@ trimestres validés:
       - montant: 3
         plafond: 600 heures/an
       - montant: 4
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "taux progressif",
-    documentation: `
-
-## taux progressif
+    documentation: `## taux progressif
 
 Ce mécanisme permet de calculer un taux progressif. On spécifie pour chaque
 tranche le plafond et le taux associé. Le taux effectif renvoyé est calculé
@@ -602,14 +544,11 @@ taux réduction de cotisation:
         plafond: 75%
       - taux: 0%
         plafond: 100%
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "composantes",
-    documentation: `
-## composantes
+    documentation: `## composantes
 
 Beaucoup de cotisations sont composées de deux parties qui partagent la
 méthode de calcul mais diffèrent selons certains paramètres. Pour ne pas
@@ -675,14 +614,11 @@ prix TTC:
       - attributs:
           nom: TVA
         taux: 20%
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "abattement",
-    documentation: `
-## abattement
+    documentation: `## abattement
 
 > **Mécanisme chainable** ([plus d’infos](/docs/principes-de-base#mécanismes-chaînés))
 
@@ -719,14 +655,11 @@ revenu imposable:
 revenu imposable:
   valeur: 2000€
   abattement: 10%
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "plancher",
-    documentation: `
-## plancher
+    documentation: `## plancher
 
 > **Mécanisme chainable** ([plus d’infos](/docs/principes-de-base#mécanismes-chaînés))
 
@@ -737,14 +670,11 @@ revenus: -500€
 assiette des cotisations:
   valeur: revenus
   plancher: 0 €
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "plafond",
-    documentation: `
-## plafond
+    documentation: `## plafond
 
 > **Mécanisme chainable** ([plus d’infos](/docs/principes-de-base#mécanismes-chaînés))
 
@@ -754,15 +684,11 @@ assiette des cotisations:
 déduction fiscale:
   valeur: 1300 €/mois
   plafond: 200 €/mois
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "durée",
-    documentation: `
-
-## durée
+    documentation: `## durée
 
 ### Exemple
 
@@ -773,14 +699,11 @@ ancienneté en fin d'année:
   durée:
     depuis: date d'embauche
     jusqu'à: 31/12/2020
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "unité",
-    documentation: `
-## unité
+    documentation: `## unité
 
 > **Mécanisme chainable** ([plus d’infos](/docs/principes-de-base#mécanismes-chaînés))
 
@@ -794,15 +717,11 @@ Affiche un avertissement si la conversion n’est pas possible à cause d’unit
 salaire:
   valeur: 35 k€/an
   unité: €/mois
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "par défaut",
-    documentation: `
-
-## par défaut
+    documentation: `## par défaut
 
 > **Mécanisme chainable** ([plus d’infos](/docs/principes-de-base#mécanismes-chaînés))
 
@@ -816,14 +735,11 @@ prix TTC:
   assiette: prix HT * (100% + TVA)
 TVA:
   par défaut: 20%
-\`\`\`
-
-`,
+\`\`\``,
   },
   {
     label: "texte",
-    documentation: `
-## texte
+    documentation: `## texte
 
 Permet de mettre en forme un texte avec des expressions évaluée dynamiquement.
 Ce principe est connu en informatique sous le nom d’interpolation de chaine de
@@ -846,8 +762,6 @@ aide vélo:
 
 aide vélo . prise en charge: 50%
 aide vélo . plafond: 500 €
-\`\`\`
-
-`,
+\`\`\``,
   },
 ];

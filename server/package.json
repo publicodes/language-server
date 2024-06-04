@@ -1,24 +1,28 @@
 {
-	"name": "publicodes-language-server",
-	"description": "Language server for Publicodes",
-	"version": "0.1.0",
-	"author": "Emile Rolley <emile.rolley@tuta.io>",
-	"license": "MIT",
-	"engines": {
-		"node": "*"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/Microsoft/vscode-extension-samples"
-	},
-	"dependencies": {
-		"fs": "^0.0.1-security",
-		"path": "^0.12.7",
-		"publicodes": "^1.0.0-beta.69",
-		"vscode-languageserver": "^8.1.0",
-		"vscode-languageserver-textdocument": "^1.0.8",
-		"yaml": "^2.2.1"
-	},
-	"scripts": {},
-	"devDependencies": {}
+  "name": "publicodes-language-server",
+  "description": "Language server for Publicodes",
+  "version": "0.1.0",
+  "author": "Emile Rolley <emile.rolley@tuta.io>",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/publicodes/publicodes-language-server"
+  },
+  "dependencies": {
+    "@publicodes/tools": "^1.2.0",
+    "fs": "^0.0.1-security",
+    "path": "^0.12.7",
+    "publicodes": "^1.3.1",
+    "tree-sitter": "^0.21.1",
+    "tree-sitter-publicodes": "^0.1.2",
+    "vscode-languageserver": "^9.0.1",
+    "vscode-languageserver-textdocument": "^1.0.11",
+    "yaml": "^2.2.1"
+  },
+  "scripts": {},
+  "devDependencies": {}
 }

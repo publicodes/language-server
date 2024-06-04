@@ -2,4 +2,9 @@ out
 node_modules
 client/server
 .vscode-test
-publicodes-language-server-0.1.0.vsix
+publicodes-language-server-*.vsix
+client/src/**/*.js
+client/src/**/*.d.ts
+server/src/**/*.js
+server/src/**/*.d.ts
+tsconfig.tsbuildinfo

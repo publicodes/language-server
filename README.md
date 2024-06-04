@@ -1,6 +1,6 @@
 <div align="center">
   <h3 align="center">
-	<big>Publicodes language server</big>
+	<big>Publicodes VSCode - LS</big>
   </h3>
   <p align="center">
    <a href="https://github.com/publicodes/language-server/issues">Report Bug</a>
@@ -8,32 +8,73 @@
    <a href="https://publi.codes">Publicodes</a>
    •
    <a href="https://marketplace.visualstudio.com/items?itemName=EmileRolley.publicodes-language-server">The VSCode extension</a>
-
   </p>
 
- :warning: <i>The project is in WIP and the server has only been tested with VSCode and the
-[nosgestesclimat](https://github.com/incubateur-ademe/nosgestesclimat) model.</i> :warning:
+A VSCode extension providing language server capabilities for
+[Publicodes](https://publi.codes/).
 
 </div>
 
-https://github.com/EmileRolley/publicodes-language-server/assets/44124798/2274c403-2007-4688-8ebd-faf5e80f6bb4
+## Features
 
-A language server for [Publicodes](https://publi.codes/) providing basic features:
-- Completions based on current project rules and publicodes's mechanisms
-- Diagnostics generated on each save
+- 🎨 Semantic highlighting (based on the Publicodes [tree-sitter
+  grammar](https://github.com/publicodes/tree-sitter-publicodes))
+- 🧪 Diagnostics (on save)
+- 📚 Code completion (keywords and rule names)
+- 💡 Go to definition
+- 🔍 Hover information (resolved name, current node value and description)
 
-> Recognized extension files are: `.publi.yml`, `.publicodes.yml`,
-> `.publi.yaml`, `.publicodes.yaml`, `.publi`, `.publicodes`.
+> Recognized extension files are: `.publicodes`
+
+## Syntax Highlighting Configuration
+
+Your colorscheme needs to support semantic highlighting to have the best
+experience with this extension.
+
+Here is the recommended configuration for the default `Dark+` and `Dark Modern`
+themes. Simply add this to your `settings.json` (accessible via the command
+palette (`Ctrl+Shift+P`) and typing `Preferences: Open Settings (JSON)`):
+
+```json
+{
+  ...
+  "editor.semanticTokenColorCustomizations": {
+    "rules": {
+      "*.readonly:publicodes": {
+        "italic": true,
+      },
+      "*.definition:publicodes": {
+        "bold": true,
+      },
+      "namespace:publicodes": {
+        "foreground": "#4ec99a"
+      },
+      "type:publicodes": {
+        "foreground": "#4EC9B0",
+        "italic": true,
+      },
+      "operator:publicodes": "#c7c7c7ad",
+      "string:publicodes": {
+        "foreground": "#CE9178",
+      },
+      "string.readonly:publicodes": "#569cd6",
+      "number:publicodes": "#e67f7f",
+      "property:publicodes": "#569CD6",
+      "property.static:publicodes": "#9CDCFE",
+      "method:publicodes": "#569CD6",
+      "macro:publicodes": {
+        "foreground": "#9CDCFE",
+        "italic": true
+      }
+    }
+  },
+}
+```
 
 ## To run in local
 
-In your terminal, run:
+1. In your terminal, install the dependencies with `yarn install`.
+2. In VSCode:
 
-```
-yarn
-yarn watch
-```
-
-In VSCode: 
 - select `Launch Client` from the drop down (if it is not already).
 - press ▷ to run the launch config (F5).

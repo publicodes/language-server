@@ -1,10 +1,8 @@
-import { DidChangeConfigurationNotification } from "vscode-languageserver/node";
+import { DidChangeConfigurationNotification } from "vscode-languageserver/node.js";
 import { LSContext } from "./context";
-import { fileURLToPath } from "node:url";
-import { parseRawPublicodesRules } from "./publicodesRules";
+import { parseDir } from "./parseRules";
 import validate from "./validate";
-import { existsSync, statSync } from "fs";
-import { readdirSync } from "node:fs";
+import { pathToFileURL } from "node:url";
 
 export default function intializedHandler(ctx: LSContext) {
   return () => {
@@ -12,37 +10,30 @@ export default function intializedHandler(ctx: LSContext) {
       // Register for all configuration changes.
       ctx.connection.client.register(
         DidChangeConfigurationNotification.type,
-        undefined
+        undefined,
       );
     }
+
     if (ctx.config.hasWorkspaceFolderCapability) {
       ctx.connection.workspace.getWorkspaceFolders().then((folders) => {
         if (folders) {
-          if (!ctx.rootFolderPath) {
-            ctx.rootFolderPath = fileURLToPath(folders[0].uri);
-            // NOTE(@EmileRolley): little hack to manage monorepos
-            ctx.nodeModulesPaths = [];
-            readdirSync(ctx.rootFolderPath).forEach((file) => {
-              const path = `${ctx.rootFolderPath}/${file}`;
-              if (!file.startsWith(".") && statSync(path)?.isDirectory()) {
-                const nodeModulesPath = `${path}/node_modules`;
-                if (existsSync(nodeModulesPath)) {
-                  ctx.nodeModulesPaths?.push(nodeModulesPath);
-                }
-              }
-            });
-          }
           folders.forEach((folder) => {
-            ctx = parseRawPublicodesRules(ctx, folder.uri);
+            parseDir(ctx, folder.uri);
           });
+          ctx.connection.console.log(`[initialized] Parsing done.`);
           ctx.connection.console.log(
-            `Validating ${Object.keys(ctx.rawPublicodesRules).length} rules`
+            `[initialized] Found ${ctx.diagnostics.size} diagnostics when parsing.`,
           );
-          validate(ctx);
+          if (ctx.diagnostics.size > 0) {
+            ctx.diagnostics.forEach((diagnostics, path) => {
+              const uri = pathToFileURL(path).href;
+              ctx.diagnosticsURI.add(uri);
+              ctx.connection.sendDiagnostics({ uri, diagnostics });
+            });
+          } else {
+            validate(ctx);
+          }
         }
-      });
-      ctx.connection.workspace.onDidChangeWorkspaceFolders((_event) => {
-        ctx.connection.console.log("Workspace folder change event received.");
       });
     }
   };

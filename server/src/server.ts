@@ -1,13 +1,10 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
 import {
   createConnection,
   TextDocuments,
   ProposedFeatures,
   InitializeParams,
-} from "vscode-languageserver/node";
+  DeleteFilesParams,
+} from "vscode-languageserver/node.js";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
 import { LSContext, defaultDirsToIgnore, defaultDocSettings } from "./context";
@@ -16,7 +13,12 @@ import initializedHandler from "./initialized";
 import { completionHandler, completionResolveHandler } from "./completion";
 import { changeConfigurationHandler } from "./configuration";
 import validate from "./validate";
-import { onChangeHandler } from "./onChange";
+import onDefinitionHandler from "./onDefinition";
+import onHoverHandler from "./onHover";
+import { semanticTokensFullProvider } from "./semanticTokens";
+import Engine from "publicodes";
+import { fileURLToPath } from "node:url";
+import { deleteFileFromCtx } from "./helpers";
 
 let ctx: LSContext = {
   // Create a connection for the server, using Node's IPC as a transport.
@@ -26,21 +28,23 @@ let ctx: LSContext = {
   documents: new TextDocuments(TextDocument),
   // Cache the settings of all open documents
   documentSettings: new Map(),
-  // The global settings, used when the `workspace/configuration` request is not supported by the client.
-  // Please note that this is the case for the current client, but could change in the future.
+  // The global settings, used when the `workspace/configuration` request is
+  // not supported by the client. Please note that this is the case for the
+  // current client, but could change in the future.
   globalSettings: defaultDocSettings,
   config: {
     hasConfigurationCapability: false,
     hasWorkspaceFolderCapability: false,
     hasDiagnosticRelatedInformationCapability: false,
   },
+  engine: new Engine({}),
+  fileInfos: new Map(),
+  diagnostics: new Map(),
   ruleToFileNameMap: new Map(),
-  fileNameToRulesMap: new Map(),
-  URIToRevalidate: new Set(),
+  diagnosticsURI: new Set(),
   rawPublicodesRules: {},
   parsedRules: {},
   dirsToIgnore: defaultDirsToIgnore,
-  lastOpenedFile: undefined,
 };
 
 ctx.connection.onInitialize((params: InitializeParams) => {
@@ -53,40 +57,79 @@ ctx.connection.onInitialized(initializedHandler(ctx));
 
 ctx.connection.onDidChangeConfiguration(changeConfigurationHandler(ctx));
 
+ctx.connection.onDefinition(onDefinitionHandler(ctx));
+
+ctx.connection.onHover(onHoverHandler(ctx));
+
+// The content of a text document has changed. This event is emitted when the
+// text document first opened or when its content has changed.
+// ctx.documents.onDidChangeContent(onChangeHandler(ctx));
+
+ctx.connection.onCompletion(completionHandler(ctx));
+
+// This handler resolves additional information for the item selected in the
+// completion list.
+ctx.connection.onCompletionResolve(completionResolveHandler(ctx));
+
+// Make the text document manager listen on the connection for open, change and
+// close text document events
+ctx.documents.listen(ctx.connection);
+
+// Listen on the connection
+ctx.connection.listen();
+
+ctx.connection.onRequest(
+  "textDocument/semanticTokens/full",
+  semanticTokensFullProvider(ctx),
+);
+
 // Only keep settings for open documents
 ctx.documents.onDidClose((e) => {
   ctx.documentSettings.delete(e.document.uri);
 });
 
-// Only keep settings for open documents
 ctx.documents.onDidSave((e) => {
   validate(ctx, e.document);
 });
 
-ctx.documents.onDidOpen((e) => {
-  ctx.lastOpenedFile = e.document.uri;
+ctx.connection.workspace.onDidDeleteFiles((e: DeleteFilesParams) => {
+  e.files.forEach(({ uri }) => {
+    ctx.connection.console.log(`[onDidDeleteFiles] ${uri}`);
+    deleteFileFromCtx(ctx, uri);
+  });
+  validate(ctx);
 });
 
-// The content of a text document has changed. This event is emitted
-// when the text document first opened or when its content has changed.
-ctx.documents.onDidChangeContent(onChangeHandler(ctx));
+ctx.connection.workspace.onDidRenameFiles((e) => {
+  e.files.forEach(({ oldUri, newUri }) => {
+    const oldFilePath = fileURLToPath(oldUri);
+    const newFilePath = fileURLToPath(newUri);
+    const fileInfo = ctx.fileInfos.get(oldFilePath);
+    if (fileInfo == undefined) {
+      ctx.connection.console.error(
+        `[onDidRenameFiles] file info not found: ${oldFilePath}`,
+      );
+      return;
+    }
 
-// ctx.connection.onDidSaveTextDocument(onSaveHandler(ctx));
+    ctx.fileInfos.set(newFilePath, fileInfo);
 
-ctx.connection.onDidChangeWatchedFiles((_change) => {
-  // Monitored files have change in VSCode
-  ctx.connection.console.log("We received an file change event");
+    const diagnostics = ctx.diagnostics.get(oldFilePath);
+    if (diagnostics != undefined) {
+      ctx.diagnostics.set(newFilePath, diagnostics);
+      ctx.diagnosticsURI.add(newUri);
+      ctx.connection.sendDiagnostics({
+        uri: newUri,
+        diagnostics,
+      });
+    }
+
+    ctx.ruleToFileNameMap.forEach((filePath, rule) => {
+      if (filePath === oldFilePath) {
+        ctx.ruleToFileNameMap.set(rule, newFilePath);
+      }
+    });
+
+    deleteFileFromCtx(ctx, oldUri);
+  });
 });
-
-ctx.connection.onCompletion(completionHandler(ctx));
-
-// This handler resolves additional information for the item selected in
-// the completion list.
-ctx.connection.onCompletionResolve(completionResolveHandler(ctx));
-
-// Make the text document manager listen on the connection
-// for open, change and close text document events
-ctx.documents.listen(ctx.connection);
-
-// Listen on the connection
-ctx.connection.listen();

@@ -2,8 +2,9 @@ import {
   InitializeParams,
   InitializeResult,
   TextDocumentSyncKind,
-} from "vscode-languageserver/node";
+} from "vscode-languageserver/node.js";
 import { GlobalConfig } from "./context";
+import { tokenModifiers, tokenTypes } from "./semanticTokens";
 
 export default function initialize(params: InitializeParams): {
   config: GlobalConfig;
@@ -26,11 +27,26 @@ export default function initialize(params: InitializeParams): {
   );
 
   const initResult: InitializeResult = {
+    // Defines the capabilities provided by the server
     capabilities: {
-      textDocumentSync: TextDocumentSyncKind.Incremental,
+      textDocumentSync: TextDocumentSyncKind.Full,
+
       // Tell the client that this server supports code completion.
       completionProvider: {
         resolveProvider: true,
+      },
+
+      definitionProvider: true,
+      hoverProvider: true,
+      semanticTokensProvider: {
+        legend: {
+          tokenTypes,
+          tokenModifiers,
+        },
+        range: false,
+        full: {
+          delta: false,
+        },
       },
     },
   };
@@ -38,6 +54,14 @@ export default function initialize(params: InitializeParams): {
     initResult.capabilities.workspace = {
       workspaceFolders: {
         supported: true,
+      },
+      fileOperations: {
+        didDelete: {
+          filters: [{ scheme: "file", pattern: { glob: "**/*.publicodes" } }],
+        },
+        didRename: {
+          filters: [{ scheme: "file", pattern: { glob: "**/*.publicodes" } }],
+        },
       },
     };
   }

@@ -28,12 +28,11 @@
       "end": "^\\s*#\\s*endregion\\b"
     }
   },
-   "indentationRules": {
-	
+  "indentationRules": {
     "increaseIndentPattern": "^\\s*.*(:|-) ?(&amp;\\w+)?(\\{[^}\"']*|\\([^)\"']*)?$",
     "decreaseIndentPattern": "^\\s+\\}$"
   },
-  "wordPattern": "(^.?[^\\s]+)+|([^\\s\n={[][\\w\\-\\.\/$%&*:\"']+)",
+  "wordPattern": "(^.?[^\\s]+)+|([^\\s\n={[][\\w\\-\\./$%&*:\"']+)",
   "onEnterRules": [
     {
       "beforeText": "^\\s*(moyenne|somme|une de ces conditions|toutes ces conditions|variations|le maximum de|le minimum de|suggestions|références)\\:\\s*$",
@@ -52,7 +51,7 @@
       "beforeText": "^\\s*-\\s.*\\s*$",
       "action": {
         "indent": "none",
-	        "appendText": "- "
+        "appendText": "- "
       }
     }
   ]

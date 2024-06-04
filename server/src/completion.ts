@@ -4,28 +4,24 @@ import {
   MarkupContent,
   MarkupKind,
   TextDocumentPositionParams,
-} from "vscode-languageserver/node";
-import { LSContext } from "./context";
+} from "vscode-languageserver/node.js";
+import { DottedName, LSContext } from "./context";
 import { RuleNode } from "publicodes";
 import { mechanisms } from "./completion-items/mechanisms";
 import { keywords } from "./completion-items/keywords";
 import { fileURLToPath } from "node:url";
+import { getRuleNameAt } from "./treeSitter";
 
 export function completionHandler(ctx: LSContext) {
   return (
-    textDocumentPosition: TextDocumentPositionParams
+    textDocumentPosition: TextDocumentPositionParams,
   ): CompletionItem[] => {
-    const { textDocument } = textDocumentPosition;
-    const currFileName = fileURLToPath(textDocument.uri)
-      .split("/")
-      .pop()
-      ?.slice(0, ".publi.yaml".length * -1);
+    const { textDocument, position } = textDocumentPosition;
+    const filePath = fileURLToPath(textDocument.uri);
+    const fullRefName = getRuleNameAt(ctx, filePath, position.line);
 
-    ctx.connection.console.log(
-      `Completion request received: URI: ${currFileName}`
-    );
     return [
-      ...getRuleCompletionItems(ctx, currFileName),
+      ...getRuleCompletionItems(ctx, fullRefName),
       ...mechanismsCompletionItems,
       ...keywordsCompletionItems,
     ];
@@ -39,71 +35,60 @@ export function completionResolveHandler(_ctx: LSContext) {
     }
     return {
       ...item,
-      labelDetails: item.data.labelDetails,
       documentation: {
         kind: MarkupKind.Markdown,
-        value: item.documentation,
+        value: item.data.description?.trimStart()?.trimEnd(),
       } as MarkupContent,
-      insertText: item.data.insertText,
     };
   };
 }
 
 const getRuleCompletionItems = (
   ctx: LSContext,
-  currFileName?: string
+  currRuleName: DottedName | undefined,
 ): CompletionItem[] => {
   return Object.entries(ctx.parsedRules).map(([dottedName, rule]) => {
     const { titre, description, icônes } = (rule as RuleNode).rawNode;
     const labelDetails = {
-      detail: (icônes != undefined ? ` ${icônes}` : "") + " [règle]",
+      detail: icônes != undefined ? ` ${icônes}` : "",
       description: titre,
     };
-
+    // Remove the current rule name from the inserted text
     const insertText =
-      currFileName && dottedName.startsWith(currFileName)
-        ? // Remove the current file name from the insert text
-          dottedName.slice(currFileName.length + " . ".length)
+      currRuleName && dottedName.startsWith(currRuleName)
+        ? dottedName.slice(currRuleName.length + " . ".length)
         : dottedName;
+
     return {
       label: dottedName,
       kind: CompletionItemKind.Function,
-      documentation: description,
       labelDetails,
+      insertText,
       data: {
-        labelDetails,
-        insertText,
+        description,
       },
     };
   });
 };
 
 const mechanismsCompletionItems: CompletionItem[] = mechanisms.map((item) => {
-  const labelDetails = {
-    detail: " [mécanisme]",
-  };
   return {
     ...item,
     kind: CompletionItemKind.Property,
-    labelDetails,
+    insertText: `${item.label}:`,
     data: {
-      labelDetails,
-      insertText: `${item.label}:`,
+      description: item.documentation,
     },
   };
 });
 
 const keywordsCompletionItems: CompletionItem[] = keywords.map((item) => {
-  const labelDetails = {
-    detail: " [mot-clé]",
-  };
   return {
     ...item,
     kind: CompletionItemKind.Keyword,
-    labelDetails,
+    insertText: `${item.label}:`,
     data: {
-      labelDetails,
-      insertText: `${item.label}:`,
+      description: item.documentation,
     },
   };
 });

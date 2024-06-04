@@ -1,14 +1,19 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
-
 import * as path from "path";
-import { workspace, ExtensionContext } from "vscode";
+import {
+  workspace,
+  ExtensionContext,
+  languages,
+  TextDocument,
+  SemanticTokens,
+} from "vscode";
 
 import {
+  CancellationToken,
   LanguageClient,
   LanguageClientOptions,
+  SemanticTokenModifiers,
+  SemanticTokenTypes,
+  SemanticTokensParams,
   ServerOptions,
   TransportKind,
 } from "vscode-languageclient/node";
@@ -18,7 +23,7 @@ let client: LanguageClient;
 export function activate(context: ExtensionContext) {
   // The server is implemented in node
   const serverModule = context.asAbsolutePath(
-    path.join("server", "out", "server.js")
+    path.join("server", "out", "server.js"),
   );
 
   // If the extension is launched in debug mode then the debug server options are used
@@ -37,7 +42,13 @@ export function activate(context: ExtensionContext) {
     documentSelector: [{ scheme: "file", language: "publicodes" }],
     synchronize: {
       // Notify the server about file changes to '.clientrc files contained in the workspace
-      fileEvents: workspace.createFileSystemWatcher("**/.clientrc"),
+      fileEvents: [
+        workspace.createFileSystemWatcher("**/.clientrc"),
+        workspace.createFileSystemWatcher("**/.publicodes"),
+      ],
+    },
+    markdown: {
+      isTrusted: true,
     },
   };
 
@@ -46,7 +57,78 @@ export function activate(context: ExtensionContext) {
     "publicodes-language-server",
     "Publicodes Language Server",
     serverOptions,
-    clientOptions
+    clientOptions,
+  );
+
+  // FIXME: only way to have a notification when a folder is deleted. Howerver,
+  // for now we only get the deleted folder, not the files inside.
+  // Consequently, we don't manage the deletion of a folder (a simple window
+  // reload is enough though).
+  // context.subscriptions.push(
+  //   workspace.onDidDeleteFiles((event: FileDeleteEvent) => {
+  //     const params: DeleteFilesParams = {
+  //       files: event.files.map((uri) => {
+  //         return {
+  //           uri: uri.toString(),
+  //         };
+  //       }),
+  //     };
+  //     client.sendNotification("workspace/didDeleteFiles", params);
+  //   }),
+  // );
+
+  context.subscriptions.push(
+    languages.registerDocumentSemanticTokensProvider(
+      { scheme: "file", language: "publicodes" },
+      {
+        async provideDocumentSemanticTokens(
+          document: TextDocument,
+          _token: CancellationToken,
+        ): Promise<SemanticTokens> {
+          const params: SemanticTokensParams = {
+            textDocument: { uri: document.uri.toString() },
+          };
+
+          return client
+            .sendRequest("textDocument/semanticTokens/full", params)
+            .catch((e) => {
+              console.error(
+                "[Publicodes] Error while requesting semantic tokens:",
+                e,
+              );
+              return e;
+            }) as Promise<SemanticTokens>;
+        },
+      },
+      // TODO: duplicate code from server/src/semanticTokens.ts
+      {
+        tokenTypes: [
+          SemanticTokenTypes.class,
+          SemanticTokenTypes.comment,
+          SemanticTokenTypes.decorator,
+          SemanticTokenTypes.enumMember,
+          SemanticTokenTypes.function,
+          SemanticTokenTypes.method,
+          SemanticTokenTypes.keyword,
+          SemanticTokenTypes.macro,
+          SemanticTokenTypes.namespace,
+          SemanticTokenTypes.number,
+          SemanticTokenTypes.operator,
+          SemanticTokenTypes.property,
+          SemanticTokenTypes.string,
+          SemanticTokenTypes.struct,
+          SemanticTokenTypes.type,
+          SemanticTokenTypes.variable,
+        ],
+        tokenModifiers: [
+          SemanticTokenModifiers.declaration,
+          SemanticTokenModifiers.definition,
+          SemanticTokenModifiers.documentation,
+          SemanticTokenModifiers.readonly,
+          SemanticTokenModifiers.static,
+        ],
+      },
+    ),
   );
 
   // Start the client. This will also launch the server
