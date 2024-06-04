@@ -23,7 +23,6 @@
   "main": "./client/out/extension",
   "scripts": {
     "deploy": "vsce publish --yarn",
-    "vscode:prepublish": "compile",
     "compile": "tsc -b && tsc-alias -p server/tsconfig.json",
     "dev": "concurrently \"tsc -b -w\" \"tsc-alias -p server/tsconfig.json -w\"",
     "lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
