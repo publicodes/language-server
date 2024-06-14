@@ -2,8 +2,6 @@ name: GitHub release and VSCode Extension publishing
 
 on:
   push:
-    branches:
-      - main
     tags:
       - "v*.*.*"
       - "v*.*.*-*"
@@ -29,14 +27,15 @@ jobs:
         run: yarn deploy
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: VSIX
-          path: "*.vsix"
+      # - name: Upload artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: VSIX
+      #     path: "*.vsix"
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          files: "*.vsix"
           draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
