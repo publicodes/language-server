@@ -25,13 +25,18 @@ jobs:
         run: yarn install --immutable
       - name: Build package
         run: npx vsce package
+      - name: Publish
+        run: yarn deploy
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VSIX
+          path: "*.vsix"
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish
-        run: yarn deploy
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
