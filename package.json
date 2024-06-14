@@ -30,7 +30,8 @@
     "test": "yarn run compile && sh ./scripts/e2e.sh",
     "format": "prettier --write .",
     "format:check": "prettier --check . server client",
-    "postversion": "git push --tags && git push"
+    "postversion": "git push --tags && git push",
+    "vscode:prepublish": "yarn run compile"
   },
   "activationEvents": [
     "onLanguage:publicodes"
