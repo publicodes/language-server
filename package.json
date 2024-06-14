@@ -5,7 +5,7 @@
   "icon": "icons/publicodes-logo.png",
   "author": "Emile Rolley <emile.rolley@tuta.io>",
   "license": "MIT",
-  "version": "0.7.9",
+  "version": "0.7.10",
   "publisher": "EmileRolley",
   "repository": {
     "type": "git",
@@ -23,14 +23,15 @@
   "main": "./client/out/extension",
   "scripts": {
     "deploy": "vsce publish --yarn",
-    "compile": "tsc -b && tsc-alias -p server/tsconfig.json",
+    "compile": "tsc -b server && tsc -b client && tsc-alias -p server/tsconfig.json",
     "dev": "concurrently \"tsc -b -w\" \"tsc-alias -p server/tsconfig.json -w\"",
     "lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
     "postinstall": "yarn install --cwd client && yarn install --cwd server",
-    "test": "sh ./scripts/e2e.sh",
+    "test": "yarn run compile && sh ./scripts/e2e.sh",
     "format": "prettier --write .",
     "format:check": "prettier --check . server client",
-    "postversion": "git push --tags && git push"
+    "postversion": "git push --tags && git push",
+    "vscode:prepublish": "yarn run compile"
   },
   "activationEvents": [
     "onLanguage:publicodes"

@@ -35,7 +35,7 @@
   "wordPattern": "(^.?[^\\s]+)+|([^\\s\n={[][\\w\\-\\./$%&*:\"']+)",
   "onEnterRules": [
     {
-      "beforeText": "^\\s*(moyenne|somme|une de ces conditions|toutes ces conditions|variations|le maximum de|le minimum de|suggestions|références)\\:\\s*$",
+      "beforeText": "^\\s*(moyenne|somme|une de ces conditions|toutes ces conditions|variations|le maximum de|le minimum de|suggestions|références|les règles)\\:\\s*$",
       "action": {
         "indent": "indent",
         "appendText": "- "
