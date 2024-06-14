@@ -1,34 +1,58 @@
-/* --------------------------------------------------------------------------------------------
- * Copyright (c) Microsoft Corporation. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
- * ------------------------------------------------------------------------------------------ */
-
 import * as vscode from "vscode";
 import * as assert from "assert";
-import { getDocUri, activate } from "./helper";
+import { getDocUri, activate, mainUri, mainPath } from "./helper";
+
+/**
+ * End-to-end test suite for diagnostics.
+ *
+ * How it works:
+ * 1. Start a vscode instance.
+ * 2. Activate the 'publicodes-language-server' extension in the instance.
+ * 3. Open the main document (main.publicodes).
+ * 4. For each test:
+ *   a. copy the content of the test document to the main document,
+ *   b. save the main document and wait for the diagnostics to be computed.
+ */
 
 suite("Should get diagnostics", () => {
-  const docUri = getDocUri("diagnostics.txt");
+  test("Missing name in import macros", async () => {
+    await testDiagnostics(getDocUri("diagnostics-import.publicodes"), [
+      {
+        message: `[ Erreur dans la macro 'importer!' ]
+Le nom du package est manquant dans la macro 'importer!' dans le fichier: ${mainPath}.
 
-  test("Diagnoses uppercase texts", async () => {
-    await testDiagnostics(docUri, [
-      {
-        message: "ANY is all uppercase.",
-        range: toRange(0, 0, 0, 3),
-        severity: vscode.DiagnosticSeverity.Warning,
-        source: "ex",
+[ Solution ]
+Ajoutez le nom du package dans la macro 'importer!'.
+
+[ Exemple ]
+importer!:
+  depuis:
+    nom: package-name
+  les règles:
+    - ruleA
+    - ruleB
+    ...
+`,
+        range: toRange(0, 0, 0, 9),
+        severity: vscode.DiagnosticSeverity.Error,
+        source: "publicodes",
       },
+    ]);
+  });
+
+  test("Malformed expression", async () => {
+    await testDiagnostics(getDocUri("diagnostics-expressions.publicodes"), [
       {
-        message: "ANY is all uppercase.",
-        range: toRange(0, 14, 0, 17),
-        severity: vscode.DiagnosticSeverity.Warning,
-        source: "ex",
-      },
-      {
-        message: "OS is all uppercase.",
-        range: toRange(0, 18, 0, 20),
-        severity: vscode.DiagnosticSeverity.Warning,
-        source: "ex",
+        message: `[ InternalError ]
+➡️  Dans la règle "logement . électricité . photovoltaique"
+✖️  
+Un problème est survenu lors du parsing de l'expression \`autoconsommation + production +\` :
+
+	le parseur Nearley n'a pas réussi à parser l'expression.
+`,
+        range: toRange(0, 0, 0, 39),
+        severity: vscode.DiagnosticSeverity.Error,
+        source: "publicodes",
       },
     ]);
   });
@@ -46,7 +70,7 @@ async function testDiagnostics(
 ) {
   await activate(docUri);
 
-  const actualDiagnostics = vscode.languages.getDiagnostics(docUri);
+  const actualDiagnostics = vscode.languages.getDiagnostics(mainUri);
 
   assert.equal(actualDiagnostics.length, expectedDiagnostics.length);
 

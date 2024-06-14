@@ -1,0 +1,5 @@
+logement . électricité . photovoltaique:
+  titre: Panneaux photovoltaïques
+  formule:
+    somme:
+      - autoconsommation + production +

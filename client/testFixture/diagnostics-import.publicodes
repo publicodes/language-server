@@ -1,0 +1,11 @@
+importer!:
+  depuis:
+    # nom: '@incubateur-ademe/publicodes-commun'
+    url: https://github.com/incubateur-ademe/publicodes-commun
+  dans: commun
+  les règles:
+    - intensité électricité
+    - mois par an
+    - semaines par an
+    - jours par semaine
+    - jours par an
