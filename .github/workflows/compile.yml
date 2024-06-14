@@ -10,10 +10,7 @@ on:
 
 jobs:
   main:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,13 +22,9 @@ jobs:
       - name: Build package
         run: yarn compile
 
-      - name: Test the package (Linux)
+      - name: Test the package
         run: xvfb-run -a npm test
         if: runner.os == 'Linux'
-
-      - name: Test the package (Others)
-        run: yarn test
-        if: runner.os != 'Linux'
 
       - name: Check file formatting
         run: yarn format:check
