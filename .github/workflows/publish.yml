@@ -2,6 +2,8 @@ name: GitHub release and VSCode Extension publishing
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*.*.*"
       - "v*.*.*-*"
