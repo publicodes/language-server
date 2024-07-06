@@ -166,7 +166,6 @@ function collectTokens(
       case "plafond":
       case "arrondi":
       case "montant":
-      case "dans":
       case "références_à":
       case "sauf_dans":
       case "choix_obligatoire":
@@ -231,6 +230,21 @@ function collectTokens(
           [SemanticTokenModifiers.readonly],
         );
         break;
+      }
+
+      case "import": {
+        const intoNode = node.childForFieldName("into");
+        if (intoNode && intoNode.type === "dotted_name") {
+          intoNode.children.forEach((name) => {
+            pushToken(
+              builder,
+              name.startPosition.row,
+              name.startPosition.column,
+              name.endPosition.column - name.startPosition.column,
+              SemanticTokenTypes.namespace,
+            );
+          });
+        }
       }
 
       case "import_rule":

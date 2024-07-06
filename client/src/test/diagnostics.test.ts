@@ -12,8 +12,9 @@ import { getDocUri, activate, mainUri, mainPath } from "./helper";
  * 4. For each test:
  *   a. copy the content of the test document to the main document,
  *   b. save the main document and wait for the diagnostics to be computed.
+ *
+ * TODO: Add at least one test for each diagnostic (need to support multiple files).
  */
-
 suite("Should get diagnostics", () => {
   test("Missing name in import macros", async () => {
     await testDiagnostics(getDocUri("diagnostics-import.publicodes"), [

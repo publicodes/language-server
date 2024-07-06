@@ -15,6 +15,7 @@ import {
 } from "./context";
 import { getTSTree } from "./treeSitter";
 import { mapAppend, positionToRange, trimQuotedString } from "./helpers";
+import { RuleName } from "@publicodes/tools";
 
 const PUBLICODES_FILE_EXTENSION = ".publicodes";
 
@@ -57,29 +58,38 @@ export function parseDocument(
   const fileInfos = ctx.fileInfos.get(filePath);
   const tsTree = getTSTree(fileContent, fileInfos, document);
   const { rawRules, errors } = parseRawRules(filePath);
+  const { definitions, importNamespace } = collectRuleDefs(tsTree.rootNode);
 
-  const ruleDefs = collectRuleDefs(tsTree.rootNode).filter(
-    ({ dottedName, namesPos }) => {
-      const ruleFilePath = ctx.ruleToFileNameMap.get(dottedName);
+  const ruleDefs = definitions.filter(({ dottedName, namesPos }) => {
+    const ruleFilePath = ctx.ruleToFileNameMap.get(dottedName);
 
-      // Check if the rule is already defined in another file
-      if (ruleFilePath && ruleFilePath !== filePath) {
-        errors.push({
-          severity: DiagnosticSeverity.Error,
-          range: positionToRange(namesPos),
-          message: `[ Erreur syntaxique ]
-La règle '${dottedName}' est déjà définie dans le fichier : "${ruleFilePath}".
+    // Check if the rule is already defined in another file
+    // TODO: add a test case for this
+    if (ruleFilePath && ruleFilePath !== filePath) {
+      errors.push({
+        severity: DiagnosticSeverity.Error,
+        range: positionToRange(namesPos),
+        message: `[ Erreur syntaxique ]
+La règle '${dottedName}' est déjà définie dans le fichier : '${ruleFilePath}'.
 
 [ Solutions ]
 - Renommez une des définitions de la règle '${dottedName}'.
 - Supprimez une des définitions de la règle '${dottedName}'.`,
-        });
-        delete rawRules[dottedName];
-        return false;
-      }
-      return true;
-    },
-  );
+      });
+      delete rawRules[dottedName];
+      return false;
+    }
+    return true;
+  });
+
+  // Checks if the namespace is not already defined in another file
+  // TODO: add a warning if the namespace is already defined in another file
+  if (importNamespace) {
+    const ruleFilePath = ctx.ruleToFileNameMap.get(importNamespace);
+    if (ruleFilePath && ruleFilePath !== filePath) {
+      delete rawRules[importNamespace];
+    }
+  }
 
   ctx.fileInfos.set(filePath, {
     // NOTE: not needed for now (we use the parsedRules from the engine)
@@ -107,6 +117,10 @@ function parseRawRules(filePath: FilePath): {
 } {
   const errors: Diagnostic[] = [];
   try {
+    // FIXME: for now, we only call getModelFromSource to resolve imports
+    // and map potential errors to the current file. We should have a
+    // better error handling mechanism in the future to only call
+    // getModelFromSource once in validate.ts.
     const resolvedRules = getModelFromSource(filePath);
     return { rawRules: resolvedRules, errors };
   } catch (e: any) {
@@ -218,24 +232,27 @@ L'attribut '${name}' doit être suivi d'une valeur.
 function collectRuleDefs(
   node: TSParser.SyntaxNode,
   parentRule?: DottedName,
-): RuleDef[] {
-  const rules: RuleDef[] = [];
+): { definitions: RuleDef[]; importNamespace: RuleName | undefined } {
+  const definitions: RuleDef[] = [];
+  // Namespace where the rules are imported (either the package name or the
+  // content of the `dans` node).
+  let importNamespace: RuleName | undefined;
 
   node.children.forEach((child) => {
     if (child.type === "import") {
-      const packageName = resolvePackageName(child);
+      importNamespace = resolvePackageName(child);
 
       child.childForFieldName("rules")?.namedChildren.forEach((rule) => {
         if (rule.type === "rule" || rule.type === "import_rule") {
-          rules.push(...getRuleDefsInRule(rule, packageName));
+          definitions.push(...getRuleDefsInRule(rule, importNamespace));
         }
       });
     } else if (child.type === "rule") {
-      rules.push(...getRuleDefsInRule(child, parentRule));
+      definitions.push(...getRuleDefsInRule(child, parentRule));
     }
   });
 
-  return rules;
+  return { definitions, importNamespace };
 }
 
 function getRuleDefsInRule(
@@ -277,7 +294,8 @@ function getRuleDefsInRule(
   if (bodyNode && bodyNode.type === "rule_body") {
     bodyNode.namedChildren.forEach((child) => {
       if (child.type === "s_avec") {
-        rules.push(...collectRuleDefs(child, dottedName));
+        const { definitions } = collectRuleDefs(child, dottedName);
+        rules.push(...definitions);
       }
     });
   }

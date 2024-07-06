@@ -14,6 +14,7 @@ export default async function validate(
   document?: TextDocument,
 ): Promise<void> {
   ctx.diagnostics = new Map();
+  let startTimer = Date.now();
 
   if (document) {
     const docFilePath = fileURLToPath(document.uri);
@@ -23,11 +24,14 @@ export default async function validate(
   try {
     // Merge all raw rules (from all files) into one object
     // NOTE: a better way could be found?
+    ctx.rawPublicodesRules = {};
+    ctx.fileInfos.forEach((fileInfo) => {
+      ctx.rawPublicodesRules = {
+        ...ctx.rawPublicodesRules,
+        ...fileInfo.rawRules,
+      };
+    });
 
-    const globFiles = [...ctx.fileInfos.keys()];
-    ctx.rawPublicodesRules = getModelFromSource(globFiles);
-
-    let startTimer = Date.now();
     ctx.engine = new Engine(ctx.rawPublicodesRules, {
       logger: getDiagnosticsLogger(ctx),
     });
@@ -62,7 +66,7 @@ export default async function validate(
   }
 
   ctx.connection.console.log(
-    `[validate] Found ${ctx.diagnostics.size} diagnostics.`,
+    `[validate] Found ${ctx.diagnostics.size} diagnostics in ${Date.now() - startTimer}ms.`,
   );
   sendDiagnostics(ctx);
 }
