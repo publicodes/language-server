@@ -24,7 +24,7 @@ A VSCode extension providing language server capabilities for
 - 💡 Go to definition
 - 🔍 Hover information (resolved name, current node value and description)
 
-> Recognized extension files are: `.publicodes`
+> Recognized extension files are: `.publicodes`, `.publicodes.yaml`, `.publicodes.yml`
 
 ## Syntax Highlighting Configuration
 

@@ -16,7 +16,11 @@ import {
 import { getTSTree } from "./treeSitter";
 import { mapAppend, positionToRange, trimQuotedString } from "./helpers";
 
-const PUBLICODES_FILE_EXTENSION = ".publicodes";
+export const PUBLICODES_FILE_EXTENSIONS = [
+  ".publicodes",
+  ".publicodes.yaml",
+  ".publicodes.yml",
+];
 
 /**
  * Explore recursively all files in the workspace folder and concat all yaml
@@ -33,7 +37,7 @@ export function parseDir(ctx: LSContext, uri: string) {
       return;
     }
     const filePath = join(path, file);
-    if (filePath.endsWith(PUBLICODES_FILE_EXTENSION)) {
+    if (PUBLICODES_FILE_EXTENSIONS.find((ext) => filePath.endsWith(ext))) {
       parseDocument(
         ctx,
         filePath,

@@ -5,6 +5,7 @@ import {
 } from "vscode-languageserver/node.js";
 import { GlobalConfig } from "./context";
 import { tokenModifiers, tokenTypes } from "./semanticTokens";
+import { PUBLICODES_FILE_EXTENSIONS } from "./parseRules";
 
 export default function initialize(params: InitializeParams): {
   config: GlobalConfig;
@@ -50,17 +51,20 @@ export default function initialize(params: InitializeParams): {
       },
     },
   };
+
   if (hasWorkspaceFolderCapability) {
+    const globPublicodesFiles = `**/*.{${PUBLICODES_FILE_EXTENSIONS.join(",")}}`;
+
     initResult.capabilities.workspace = {
       workspaceFolders: {
         supported: true,
       },
       fileOperations: {
         didDelete: {
-          filters: [{ scheme: "file", pattern: { glob: "**/*.publicodes" } }],
+          filters: [{ scheme: "file", pattern: { glob: globPublicodesFiles } }],
         },
         didRename: {
-          filters: [{ scheme: "file", pattern: { glob: "**/*.publicodes" } }],
+          filters: [{ scheme: "file", pattern: { glob: globPublicodesFiles } }],
         },
       },
     };
