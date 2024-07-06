@@ -44,7 +44,9 @@
           "Publicodes"
         ],
         "extensions": [
-          ".publicodes"
+          ".publicodes",
+          ".publicodes.yaml",
+          ".publicodes.yml"
         ],
         "configuration": "./language-configuration.json",
         "icon": {
