@@ -7,12 +7,14 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { Logger } from "publicodes";
 import { mapAppend, positionToRange } from "./helpers";
 import { getRefInRule } from "./treeSitter";
+import { getModelFromSource } from "@publicodes/tools/compilation";
 
 export default async function validate(
   ctx: LSContext,
   document?: TextDocument,
 ): Promise<void> {
   ctx.diagnostics = new Map();
+  let startTimer = Date.now();
 
   if (document) {
     const docFilePath = fileURLToPath(document.uri);
@@ -30,7 +32,6 @@ export default async function validate(
       };
     });
 
-    let startTimer = Date.now();
     ctx.engine = new Engine(ctx.rawPublicodesRules, {
       logger: getDiagnosticsLogger(ctx),
     });
@@ -65,7 +66,7 @@ export default async function validate(
   }
 
   ctx.connection.console.log(
-    `[validate] Found ${ctx.diagnostics.size} diagnostics.`,
+    `[validate] Found ${ctx.diagnostics.size} diagnostics in ${Date.now() - startTimer}ms.`,
   );
   sendDiagnostics(ctx);
 }
