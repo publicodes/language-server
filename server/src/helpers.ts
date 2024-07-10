@@ -1,3 +1,4 @@
+import TSParser from "tree-sitter";
 import { Range, URI } from "vscode-languageserver";
 import { LSContext, Position } from "./context";
 import { fileURLToPath } from "node:url";

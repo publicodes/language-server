@@ -1,7 +1,7 @@
 import TSParser, { SyntaxNode } from "tree-sitter";
 import Publicodes from "tree-sitter-publicodes";
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { DottedName, FileInfos, LSContext } from "./context";
+import { DottedName, FileInfos, LSContext, Position } from "./context";
 import { utils } from "publicodes";
 import assert from "assert";
 import { trimQuotedString } from "./helpers";
@@ -26,11 +26,7 @@ parser.setLanguage(Publicodes);
  * tree-sitter's buffer size limit. Due to the C API, the buffer size is
  * limited to INT_MAX.
  */
-export function getTSTree(
-  content: string,
-  fileInfos: FileInfos | undefined,
-  document: TextDocument | undefined,
-): TSParser.Tree {
+export function getTSTree(content: string): TSParser.Tree {
   const MAX_C_INT = 32_767;
 
   return parser.parse((idx, _pos) => {

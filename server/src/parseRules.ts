@@ -59,8 +59,7 @@ export function parseDocument(
   document?: TextDocument,
 ) {
   const fileContent = document?.getText() ?? readFileSync(filePath).toString();
-  const fileInfos = ctx.fileInfos.get(filePath);
-  const tsTree = getTSTree(fileContent, fileInfos, document);
+  const tsTree = getTSTree(fileContent);
   const { rawRules, errors } = parseRawRules(filePath);
   const { definitions, importNamespace } = collectRuleDefs(tsTree.rootNode);
 

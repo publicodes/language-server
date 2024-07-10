@@ -10,21 +10,41 @@ import { RuleNode } from "publicodes";
 import { mechanisms } from "./completion-items/mechanisms";
 import { keywords } from "./completion-items/keywords";
 import { fileURLToPath } from "node:url";
-import { getRuleNameAt } from "./treeSitter";
+import { getRuleNameAt, getTSTree } from "./treeSitter";
+
+// We don't want to suggest completion items in these nodes
+const nodesToIgnore = ["text_line", "paragraph", "meta_value"];
 
 export function completionHandler(ctx: LSContext) {
   return (
     textDocumentPosition: TextDocumentPositionParams,
-  ): CompletionItem[] => {
+  ): CompletionItem[] | undefined => {
     const { textDocument, position } = textDocumentPosition;
     const filePath = fileURLToPath(textDocument.uri);
     const fullRefName = getRuleNameAt(ctx, filePath, position.line);
 
-    return [
-      ...getRuleCompletionItems(ctx, fullRefName),
-      ...mechanismsCompletionItems,
-      ...keywordsCompletionItems,
-    ];
+    // PERF: we need to get the most up-to-date version of the tree. This is
+    // done multiple times in the code (here, in semanticTokens.ts). As it's
+    // almost instantaneous, we can afford it. Howerver, we should consider
+    // having a single source of truth for the tree (even though it's can
+    // force to manage async operations with the cost it implies).
+    const fileContent = ctx.documents.get(textDocument.uri)?.getText()!;
+    const tsTree = getTSTree(fileContent);
+
+    const nodeAtCursorPosition = tsTree?.rootNode.descendantForPosition({
+      row: position.line,
+      // We need to be sure to be in the current node, even if the cursor is
+      // at the end of the line.
+      column: position.character - 1,
+    });
+
+    return !nodesToIgnore.includes(nodeAtCursorPosition?.type)
+      ? [
+          ...getRuleCompletionItems(ctx, fullRefName),
+          ...mechanismsCompletionItems,
+          ...keywordsCompletionItems,
+        ]
+      : [];
   };
 }
 
