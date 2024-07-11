@@ -69,9 +69,10 @@
         "editor.autoIndent": "advanced",
         "editor.quickSuggestions": {
           "other": true,
-          "comments": true,
+          "comments": false,
           "strings": true
         },
+        "editor.wordBasedSuggestions": "off",
         "editor.semanticHighlight.enable": true,
         "diffEditor.ignoreTrimWhitespace": false
       }

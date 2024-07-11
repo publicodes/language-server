@@ -93,9 +93,13 @@ ctx.documents.onDidSave((e) => {
   validate(ctx, e.document);
 });
 
-ctx.documents.onDidChangeContent((e) => {
-  parseDocument(ctx, fileURLToPath(e.document.uri), e.document);
-});
+// NOTE: I don't think we need this anymore as we directly parse tsTree when needed
+// up-to-date with the document content like for auto-completion or semantic tokens.
+// ctx.documents.onDidChangeContent((e) => {
+//   // ctx.connection.console.log(`[onDidChangeContent] ${e.document.uri}`);
+//   // parseDocument(ctx, fileURLToPath(e.document.uri), e.document);
+//   // ctx.connection.console.log(`[onDidChangeContent] parsed ${e.document.uri}`);
+// });
 
 ctx.connection.workspace.onDidDeleteFiles((e: DeleteFilesParams) => {
   e.files.forEach(({ uri }) => {

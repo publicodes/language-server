@@ -8,17 +8,15 @@ import {
 import { LSContext } from "./context";
 import TSParser from "tree-sitter";
 import { getTSTree } from "./treeSitter";
-import { fileURLToPath } from "node:url";
 
 export function semanticTokensFullProvider(ctx: LSContext) {
   return ({ textDocument }: SemanticTokensParams): SemanticTokens => {
     const document = ctx.documents.get(textDocument.uri);
     const builder = new SemanticTokensBuilder();
-    const fileInfos = ctx.fileInfos.get(fileURLToPath(textDocument.uri));
 
     if (document) {
       const fileContent = document.getText();
-      const currentTree = getTSTree(fileContent, fileInfos, document);
+      const currentTree = getTSTree(fileContent);
       collectTokens(ctx, builder, currentTree.rootNode);
     }
 
