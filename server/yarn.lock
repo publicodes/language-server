@@ -19,14 +19,16 @@
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
 
-"@publicodes/tools@^1.2.1":
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/@publicodes/tools/-/tools-1.2.1.tgz#78fc517370ddf19df3cd4bcc1e7216b3c1f2da58"
-  integrity sha512-ru6jpbxDIA0dZdHD9Py0uS0WPaA3H3Lf/Oz1ZxikiNcXC0wgLdP0RhnwYcmW5tY/wkrPYlM/5mE0iKkVlsxAzQ==
+"@publicodes/tools@^1.2.5":
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/@publicodes/tools/-/tools-1.2.5.tgz#ab3177a027d530718057600f78512473a392d8e7"
+  integrity sha512-Cv2nhqd8ucKhFNi6g9aiUqV+PghAdZXk0ECmzXUQjr7AWYVoQZo+/b6rnGcR5uuwg3HOoYqRY8sUenvz80I2sg==
   dependencies:
     "@types/node" "^18.11.18"
     glob "^10.4.1"
-    publicodes "^1.3.0"
+    path "^0.12.7"
+    publicodes "^1.3.3"
+    yaml "^2.4.5"
 
 "@types/node@^18.11.18":
   version "18.19.31"
@@ -170,20 +172,25 @@ minimatch@^9.0.4:
   resolved "https://registry.yarnpkg.com/minipass/-/minipass-7.1.2.tgz#93a9626ce5e5e66bd4db86849e7515e92340a707"
   integrity sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==
 
-node-addon-api@^7.1.0:
-  version "7.1.0"
-  resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-7.1.0.tgz#71f609369379c08e251c558527a107107b5e0fdb"
-  integrity sha512-mNcltoe1R8o7STTegSOHdnJNN7s5EUvhoS7ShnTHDyOSd+8H+UdWODq6qSv67PjC8Zc5JRT8+oLAMCr0SIXw7g==
-
 node-addon-api@^8.0.0:
   version "8.0.0"
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-8.0.0.tgz#5453b7ad59dd040d12e0f1a97a6fa1c765c5c9d2"
   integrity sha512-ipO7rsHEBqa9STO5C5T10fj732ml+5kLN1cAG8/jdHd56ldQeGj3Q7+scUS+VHK/qy1zLEwC4wMK5+yM0btPvw==
 
+node-addon-api@^8.1.0:
+  version "8.1.0"
+  resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-8.1.0.tgz#55a573685dd4bd053f189cffa4e6332d2b1f1645"
+  integrity sha512-yBY+qqWSv3dWKGODD6OGE6GnTX7Q2r+4+DfpqxHSHh8x0B4EKP9+wVGLS6U/AM1vxSNNmUEuIV5EGhYwPpfOwQ==
+
 node-gyp-build@^4.8.0:
   version "4.8.0"
   resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.8.0.tgz#3fee9c1731df4581a3f9ead74664369ff00d26dd"
   integrity sha512-u6fs2AEUljNho3EYTJNBfImO5QTo/J/1Etd+NVdCj7qWKUSN/bSLkZwhDv7I+w/MSC6qJ4cknepkAYykDdK8og==
+
+node-gyp-build@^4.8.1:
+  version "4.8.1"
+  resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.8.1.tgz#976d3ad905e71b76086f4f0b0d3637fe79b6cda5"
+  integrity sha512-OSs33Z9yWr148JZcbZd5WiAXhh/n9z8TxQcdMhIOlpN9AhWpLfvVFO73+m77bBABQMaY9XSvIa+qk0jlI7Gcaw==
 
 path-key@^3.1.0:
   version "3.1.1"
@@ -211,10 +218,10 @@ process@^0.11.1:
   resolved "https://registry.yarnpkg.com/process/-/process-0.11.10.tgz#7332300e840161bda3e69a1d1d91a7d4bc16f182"
   integrity sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A==
 
-publicodes@^1.3.0, publicodes@^1.3.1:
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/publicodes/-/publicodes-1.3.1.tgz#b30e5e82cdfafd38c00fb6432ceac66f4bff5f58"
-  integrity sha512-By464NDaCc3fwRgq6BDMqoyYiapcRCBiFuQsF1ctazOoxtJ3SVXb0AVsIHMPqKFFj5elhD/8IljF7iqQqDDZxA==
+publicodes@^1.3.3, publicodes@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/publicodes/-/publicodes-1.4.0.tgz#6f126326d0895ec9679ea31fa2c12a27b206f633"
+  integrity sha512-42LTuqGB8g8DP3ZUbT4vKu+D6fR7iJ+Ibcsw0SALFw25UKPpRBi8ibYvcoDt4FWf9CAFUKaSdLe6EYN1GS2W3w==
 
 shebang-command@^2.0.0:
   version "2.0.0"
@@ -281,13 +288,13 @@ strip-ansi@^7.0.1:
   dependencies:
     ansi-regex "^6.0.1"
 
-tree-sitter-publicodes@^0.1.2:
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/tree-sitter-publicodes/-/tree-sitter-publicodes-0.1.2.tgz#f1d910adf55916117d647e335311f9c69602f804"
-  integrity sha512-72+wpFbbQsJZ11K+EEUUV49GqrcOd9NX3Efg0sHPEfJPVh62tq7hMLbTG2tXkXxVWVAYMzHA4YryCC4Kkk3m7A==
+tree-sitter-publicodes@^0.1.3:
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/tree-sitter-publicodes/-/tree-sitter-publicodes-0.1.3.tgz#df017aebf9f5e2431e8d6399085a9bf5c88d4ebd"
+  integrity sha512-47SUVDkebStqNB1U3s7fW+ZfBbZ2S/Gv02Cmd7Q7ddSgkUd3tzB551cCMsAqFijm/xBzey9crFsmAKxE3af4gw==
   dependencies:
-    node-addon-api "^7.1.0"
-    node-gyp-build "^4.8.0"
+    node-addon-api "^8.1.0"
+    node-gyp-build "^4.8.1"
 
 tree-sitter@^0.21.1:
   version "0.21.1"
@@ -368,3 +375,8 @@ yaml@^2.2.1:
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/yaml/-/yaml-2.4.1.tgz#2e57e0b5e995292c25c75d2658f0664765210eed"
   integrity sha512-pIXzoImaqmfOrL7teGUBt/T7ZDnyeGBWyXQBvOVhLkWLN37GXv8NMLK406UY6dS51JfcQHsmcW5cJ441bHg6Lg==
+
+yaml@^2.4.5:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/yaml/-/yaml-2.5.0.tgz#c6165a721cf8000e91c36490a41d7be25176cf5d"
+  integrity sha512-2wWLbGbYDiSqqIKoPjar3MPgB94ErzCtrNE1FdqGuaO0pi2JGjmE8aW8TDZwzU7vuxcGRdL/4gPQwQ7hD5AMSw==
