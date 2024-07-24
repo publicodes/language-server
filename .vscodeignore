@@ -1,4 +1,14 @@
 .vscode/**
+scripts/
+.github/
+.gitignore
+.vscode/
+.vscode-test/
+.eslintignore
+.eslintrc.js
+node_modules/
+**/tsconfig.json
+**/tsconfig.tsbuildinfo
 **/*.ts
 **/*.map
 .gitignore
@@ -6,7 +16,9 @@
 **/tsconfig.base.json
 contributing.md
 .travis.yml
-client/node_modules/**
+yarn.lock
+
+client/node_modules/
 !client/node_modules/vscode-jsonrpc/**
 !client/node_modules/vscode-languageclient/**
 !client/node_modules/vscode-languageserver-protocol/**

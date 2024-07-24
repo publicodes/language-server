@@ -1,10 +1,31 @@
-import TSParser, { SyntaxNode } from "tree-sitter";
-import Publicodes from "tree-sitter-publicodes";
 import { TextDocument } from "vscode-languageserver-textdocument";
+import Publicodes from "tree-sitter-publicodes";
+import TSParser, { SyntaxNode } from "tree-sitter";
 import { DottedName, FileInfos, LSContext, Position } from "./context";
 import { utils } from "publicodes";
 import assert from "assert";
 import { trimQuotedString } from "./helpers";
+
+// export function getParser(): TSParser {
+//   const platform = process.platform;
+//   const arch = process.arch;
+//   // const treeSitterPath = require.resolve(
+//   //   `tree-sitter-${platform}-${arch}.node`,
+//   // );
+//   const treeSitter = require(`tree-sitter-${platform}-${arch}.node`);
+//   const parser = new treeSitter.TSParser();
+//   // const publicodesPath = require.resolve(
+//   //   `tree-sitter-publicodes-${platform}-${arch}.node`,
+//   // );
+//   parser.setLanguage(
+//     require(`tree-sitter-publicodes-${platform}-${arch}.node`),
+//   );
+//   return parser;
+// }
+//
+
+// const parser = getParser();
+//
 
 const parser = new TSParser();
 parser.setLanguage(Publicodes);

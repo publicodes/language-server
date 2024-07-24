@@ -22,16 +22,21 @@
   },
   "main": "./client/out/extension",
   "scripts": {
-    "deploy": "vsce publish --yarn",
     "compile": "tsc -b server && tsc -b client && tsc-alias -p server/tsconfig.json",
+    "watch": "tsc -b -w",
+    "postinstall": "yarn install --cwd client && yarn install --cwd server",
+    "bundle-client": "esbuild client/src/extension.ts --bundle --external:vscode --sourcemap --outfile=client/out/extension.js --format=cjs --platform=node --loader:.node=file --minify",
+    "bundle-server": "esbuild server/src/server.ts --bundle --sourcemap --external:tree-sitter-publicodes --outfile=server/out/server.js --format=cjs --platform=node --loader:.node=file --minify",
+    "bundle": "node esbuild.mjs",
+    "vscode:prepublish": "yarn run compile",
+    "clean": "rm -rf ./client/out ./server/out",
+    "deploy": "vsce publish --yarn",
     "dev": "concurrently \"tsc -b -w\" \"tsc-alias -p server/tsconfig.json -w\"",
     "lint": "eslint ./client/src ./server/src --ext .ts,.tsx",
-    "postinstall": "yarn install --cwd client && yarn install --cwd server",
     "test": "yarn run compile && sh ./scripts/e2e.sh",
     "format": "prettier --write .",
     "format:check": "prettier --check . server client",
-    "postversion": "git push --tags && git push --force",
-    "vscode:prepublish": "yarn run compile"
+    "postversion": "git push --tags && git push --force"
   },
   "activationEvents": [
     "onLanguage:publicodes"
@@ -102,18 +107,25 @@
     }
   },
   "devDependencies": {
+    "@douglasneuroinformatics/esbuild-plugin-native-modules": "^0.0.2",
     "@types/mocha": "^9.1.0",
     "@types/node": "^16.11.7",
     "@typescript-eslint/eslint-plugin": "^5.54.0",
     "@typescript-eslint/parser": "^5.54.0",
     "@vscode/vsce": "^2.26.1",
     "concurrently": "^8.2.2",
+    "esbuild": "^0.23.0",
+    "esbuild-plugin-native-modules": "^1.0.0",
     "eslint": "^8.35.0",
     "mocha": "^9.2.1",
     "prettier": "^3.3.0",
+    "ts-loader": "^9.5.1",
     "tsc": "^2.0.4",
     "tsc-alias": "^1.8.8",
     "tsup": "^8.0.2",
-    "typescript": "^5.0.2"
+    "typescript": "^5.0.2",
+    "vsce": "^2.15.0",
+    "webpack": "^5.93.0",
+    "webpack-cli": "^5.1.4"
   }
 }

@@ -132,8 +132,8 @@ function parseRawRules(filePath: FilePath): {
         const match = e.message.match(
           /^Map keys must be unique at line (\d+), column (\d+)/,
         );
-        const line = Number(match?.[1]) - 1 ?? 0;
-        const column = Number(match?.[2]) - 1 ?? 0;
+        const line = Number(match?.[1]) - 1;
+        const column = Number(match?.[2]) - 1;
         const name = e.message.match(/(\n.*)*\n(.+):/)?.[2] ?? "";
 
         errors.push({
@@ -159,8 +159,8 @@ La règle '${name}' est définie plusieurs fois dans le fichier.
         const match = e.message.match(
           /^Implicit map keys need to be followed by map values at line (\d+), column (\d+)/,
         );
-        const line = Number(match?.[1]) - 1 ?? 0;
-        const column = Number(match?.[2]) - 1 ?? 0;
+        const line = Number(match?.[1]) - 1;
+        const column = Number(match?.[2]) - 1;
         const name = e.message.match(/\s*(.*)\n\s*\^+/)?.[1] ?? "<nom>";
 
         errors.push({
@@ -184,8 +184,8 @@ L'attribut '${name}' doit être suivi d'une valeur.
         const match = e.message.match(
           /^Implicit keys need to be on a single line at line (\d+), column (\d+)/,
         );
-        const line = Number(match?.[1]) - 1 ?? 0;
-        const column = Number(match?.[2]) - 1 ?? 0;
+        const line = Number(match?.[1]) - 1;
+        const column = Number(match?.[2]) - 1;
         const name = e.message.match(/\s*(.*)\n\s*\^+/)?.[1] ?? "<nom>";
 
         errors.push({
