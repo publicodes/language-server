@@ -32,7 +32,7 @@
     "increaseIndentPattern": "^\\s*.*(:|-) ?(&amp;\\w+)?(\\{[^}\"']*|\\([^)\"']*)?$",
     "decreaseIndentPattern": "^\\s+\\}$"
   },
-  "wordPattern": "(^.?[^\\s]+)+|([^\\s\n={[][\\w\\-\\./$%&*:\"']+)",
+  "wordPattern": "",
   "onEnterRules": [
     {
       "beforeText": "^\\s*(moyenne|somme|une de ces conditions|toutes ces conditions|variations|le maximum de|le minimum de|suggestions|références|les règles)\\:\\s*$",

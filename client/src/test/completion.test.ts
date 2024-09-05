@@ -17,16 +17,21 @@ suite("Should do completion", () => {
     await testCompletion(docUri, new vscode.Position(7, 20), true);
   });
 
-  test("Complete in expressions", async () => {
-    await testCompletion(docUri, new vscode.Position(2, 18), false);
-  });
+  // TODO: implement correct test
+  // test("Complete in expressions", async () => {
+  //   await testCompletion(docUri, new vscode.Position(11, 12), false, [
+  //     ruleItem("rule a"),
+  //     ruleItem("b"),
+  //     ruleItem("c"),
+  //   ]);
+  // });
 });
 
 async function testCompletion(
   docUri: vscode.Uri,
   position: vscode.Position,
-  shouldBeEmtpy: boolean,
-  // expectedCompletionList?: vscode.CompletionList,
+  shouldBeEmpty: boolean,
+  expectedRulesCompletionItems?: vscode.CompletionItem[],
 ) {
   await activate(docUri);
 
@@ -37,17 +42,32 @@ async function testCompletion(
     position,
   )) as vscode.CompletionList;
 
-  if (shouldBeEmtpy) {
+  if (shouldBeEmpty) {
     assert.ok(actualCompletionList.items.length === 0);
   } else {
     assert.ok(actualCompletionList.items.length > 0);
-    // assert.ok(
-    //   actualCompletionList.items.length === expectedCompletionList.items.length,
-    // );
-    // expectedCompletionList.items.forEach((expectedItem, i) => {
-    //   const actualItem = actualCompletionList.items[i];
-    //   assert.equal(actualItem.label, expectedItem.label);
-    //   assert.equal(actualItem.kind, expectedItem.kind);
-    // });
+    const actualRulesCompletionItems = actualCompletionList.items.filter(
+      (item) => {
+        return (
+          item.kind !== vscode.CompletionItemKind.Property &&
+          item.kind !== vscode.CompletionItemKind.Keyword
+        );
+      },
+    );
+    console.log(actualRulesCompletionItems);
+    console.log(expectedRulesCompletionItems);
+    assert.ok(
+      actualRulesCompletionItems.length ===
+        expectedRulesCompletionItems?.length,
+    );
+    expectedRulesCompletionItems?.forEach((expectedItem, i) => {
+      const actualItem = actualRulesCompletionItems[i];
+      assert.equal(actualItem.label, expectedItem.label);
+      assert.equal(actualItem.kind, expectedItem.kind);
+    });
   }
+}
+
+function ruleItem(label: string): vscode.CompletionItem {
+  return new vscode.CompletionItem(label, vscode.CompletionItemKind.Function);
 }

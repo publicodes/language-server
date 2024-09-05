@@ -67,9 +67,9 @@
         "editor.tabSize": 2,
         "editor.autoIndent": "advanced",
         "editor.quickSuggestions": {
-          "other": true,
-          "comments": false,
-          "strings": true
+          "other": "on",
+          "comments": "off",
+          "strings": "on"
         },
         "editor.wordBasedSuggestions": "off",
         "editor.semanticHighlight.enable": true,

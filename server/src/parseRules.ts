@@ -132,8 +132,8 @@ function parseRawRules(filePath: FilePath): {
         const match = e.message.match(
           /^Map keys must be unique at line (\d+), column (\d+)/,
         );
-        const line = Number(match?.[1]) - 1 ?? 0;
-        const column = Number(match?.[2]) - 1 ?? 0;
+        const line = Number(match?.[1] ?? 1) - 1;
+        const column = Number(match?.[2] ?? 1) - 1;
         const name = e.message.match(/(\n.*)*\n(.+):/)?.[2] ?? "";
 
         errors.push({
