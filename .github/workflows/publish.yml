@@ -1,11 +1,18 @@
 name: GitHub release and VSCode Extension publishing
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
-      - "v*.*.*-*"
-      - "v*.*.*-*.*"
+  workflow_run:
+    workflows: ["Build, test and check format"]
+    branch:
+      - main
+    types:
+      - completed
+
+  # push:
+  #   tags:
+  #     - "v*.*.*"
+  #     - "v*.*.*-*"
+  #     - "v*.*.*-*.*"
 
 jobs:
   publish:
