@@ -1,10 +1,10 @@
 rule a:
     titre: Résultat
-    valeur: b + c
+    valeur: rule a . b + rule a . c
 
 rule a . b:
     valeur: 2
     description: |
         Description.
 
-rule a . c: 3
+rule a . c:
