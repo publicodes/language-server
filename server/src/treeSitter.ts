@@ -1,7 +1,6 @@
 import TSParser, { SyntaxNode } from "tree-sitter";
 import Publicodes from "tree-sitter-publicodes";
-import { TextDocument } from "vscode-languageserver-textdocument";
-import { DottedName, FileInfos, LSContext, Position } from "./context";
+import { DottedName, LSContext } from "./context";
 import { utils } from "publicodes";
 import assert from "assert";
 import { trimQuotedString } from "./helpers";
@@ -112,15 +111,13 @@ export function getRefInRule(
     return null;
   }
 
-  let ruleNode: SyntaxNode | null = tsTree.rootNode.descendantForPosition(
+  let ruleNode: SyntaxNode | null = tsTree.rootNode.descendantsOfType(
+    "rule_body",
     ruleDef.defPos.start,
-  );
-  if (ruleNode == undefined) {
-    return null;
-  }
+    ruleDef.defPos.end,
+  )[0];
 
-  ruleNode = ruleNode.nextNamedSibling;
-  if (ruleNode == undefined || ruleNode.type !== "rule_body") {
+  if (ruleNode == undefined) {
     return null;
   }
 
@@ -131,7 +128,7 @@ function searchRefInNode(
   node: SyntaxNode,
   refName: DottedName,
 ): SyntaxNode | null {
-  if (node.type === "reference" && node.text === refName) {
+  if (node.type === "reference" && node.text.trim() === refName) {
     return node;
   }
 

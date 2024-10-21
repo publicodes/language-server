@@ -57,6 +57,20 @@ Un problème est survenu lors du parsing de l'expression \`autoconsommation + pr
       },
     ]);
   });
+
+  test("Unknown reference", async () => {
+    await testDiagnostics(getDocUri("diagnostics-unknown-ref.publicodes"), [
+      {
+        message: `La référence "unknown" est introuvable.
+
+[ Solution ]
+- Vérifiez que la référence "unknown" est bien écrite.`,
+        range: toRange(1, 9, 1, 17),
+        severity: vscode.DiagnosticSeverity.Error,
+        source: "publicodes",
+      },
+    ]);
+  });
 });
 
 function toRange(sLine: number, sChar: number, eLine: number, eChar: number) {
