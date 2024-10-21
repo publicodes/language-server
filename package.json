@@ -29,6 +29,7 @@
     "postinstall": "yarn install --cwd client && yarn install --cwd server",
     "test": "yarn run compile && sh ./scripts/e2e.sh",
     "format": "prettier --write .",
+    "postversion": "git push --tags",
     "format:check": "prettier --check . server client",
     "vscode:prepublish": "yarn run compile"
   },
