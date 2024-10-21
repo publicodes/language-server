@@ -32,12 +32,11 @@ jobs:
       #     name: VSIX
       #     path: "*.vsix"
       - uses: softprops/action-gh-release@v2
-        # if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           generate_release_notes: true
           files: "*.vsix"
           draft: false
-          tag: ${{ github.ref }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Install dependencies
