@@ -288,10 +288,10 @@ strip-ansi@^7.0.1:
   dependencies:
     ansi-regex "^6.0.1"
 
-tree-sitter-publicodes@^0.1.3:
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/tree-sitter-publicodes/-/tree-sitter-publicodes-0.1.3.tgz#df017aebf9f5e2431e8d6399085a9bf5c88d4ebd"
-  integrity sha512-47SUVDkebStqNB1U3s7fW+ZfBbZ2S/Gv02Cmd7Q7ddSgkUd3tzB551cCMsAqFijm/xBzey9crFsmAKxE3af4gw==
+tree-sitter-publicodes@^0.1.4:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/tree-sitter-publicodes/-/tree-sitter-publicodes-0.1.4.tgz#b4489d7c89e0cfed2e40d779131b856e21b287fb"
+  integrity sha512-x8zs1GfTA3dvp+3IN9S+MyPTg2KHDGetPOga3nE7XnDpFlORc8hGEp4SoIIUBQLkph2EAFxu0QVxlyjeHRhizw==
   dependencies:
     node-addon-api "^8.1.0"
     node-gyp-build "^4.8.1"
