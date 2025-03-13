@@ -1,6 +1,6 @@
-import * as vscode from "vscode";
 import * as assert from "assert";
-import { getDocUri, activate, mainUri, mainPath } from "./helper";
+import * as vscode from "vscode";
+import { activate, getDocUri, mainPath, mainUri } from "./helper";
 
 /**
  * End-to-end test suite for diagnostics.
@@ -44,12 +44,13 @@ importer!:
   test("Malformed expression", async () => {
     await testDiagnostics(getDocUri("diagnostics-expressions.publicodes"), [
       {
-        message: `[ InternalError ]
+        message: `[ Erreur syntaxique ]
 ➡️  Dans la règle "logement . électricité . photovoltaique"
-✖️  
-Un problème est survenu lors du parsing de l'expression \`autoconsommation + production +\` :
-
-	le parseur Nearley n'a pas réussi à parser l'expression.
+✖️  L'expression suivante n'est pas valide :
+   
+   autoconsommation + production +
+                                ^
+   Les opérateurs doivent être entourés d’espaces ("2 + 2" et non "2+2")
 `,
         range: toRange(0, 0, 0, 39),
         severity: vscode.DiagnosticSeverity.Error,
@@ -81,7 +82,7 @@ function toRange(sLine: number, sChar: number, eLine: number, eChar: number) {
 
 async function testDiagnostics(
   docUri: vscode.Uri,
-  expectedDiagnostics: vscode.Diagnostic[],
+  expectedDiagnostics: vscode.Diagnostic[]
 ) {
   await activate(docUri);
 
