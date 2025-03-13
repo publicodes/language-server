@@ -82,7 +82,7 @@ function toRange(sLine: number, sChar: number, eLine: number, eChar: number) {
 
 async function testDiagnostics(
   docUri: vscode.Uri,
-  expectedDiagnostics: vscode.Diagnostic[]
+  expectedDiagnostics: vscode.Diagnostic[],
 ) {
   await activate(docUri);
 
