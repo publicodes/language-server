@@ -4,6 +4,7 @@ import {
   ProposedFeatures,
   InitializeParams,
   DeleteFilesParams,
+  SymbolKind,
 } from "vscode-languageserver/node.js";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
@@ -18,8 +19,12 @@ import onHoverHandler from "./onHover";
 import { semanticTokensFullProvider } from "./semanticTokens";
 import Engine from "publicodes";
 import { fileURLToPath } from "node:url";
-import { deleteFileFromCtx } from "./helpers";
-import { parseDocument } from "./parseRules";
+import { deleteFileFromCtx, positionToRange } from "./helpers";
+import {
+  codeActionHandler,
+  createRule,
+  PublicodesCommands,
+} from "./codeAction";
 
 let ctx: LSContext = {
   // Create a connection for the server, using Node's IPC as a transport.
@@ -140,5 +145,43 @@ ctx.connection.workspace.onDidRenameFiles((e) => {
     });
 
     deleteFileFromCtx(ctx, oldUri);
+  });
+});
+
+ctx.connection.onCodeAction((params) => codeActionHandler(ctx, params));
+
+ctx.connection.onExecuteCommand((params) => {
+  switch (params.command) {
+    case PublicodesCommands.CREATE_RULE: {
+      if (params.arguments == undefined || params.arguments.length === 0) {
+        ctx.connection.console.error(
+          `[onExecuteCommand] ${PublicodesCommands.CREATE_RULE} missing arguments`,
+        );
+        return;
+      }
+      createRule(ctx, params.arguments[0]);
+      break;
+    }
+  }
+});
+
+ctx.connection.onDocumentSymbol((params) => {
+  const uri = params.textDocument.uri;
+  const filePath = fileURLToPath(uri);
+  const fileInfo = ctx.fileInfos.get(filePath);
+  if (fileInfo == undefined) {
+    ctx.connection.console.error(
+      `[onDocumentSymbol] file info not found: ${filePath}`,
+    );
+    return [];
+  }
+
+  return fileInfo.ruleDefs.map(({ dottedName, namesPos, defPos }) => {
+    return {
+      name: dottedName,
+      kind: SymbolKind.Namespace,
+      range: positionToRange(defPos),
+      selectionRange: positionToRange(namesPos),
+    };
   });
 });

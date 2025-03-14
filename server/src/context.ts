@@ -89,3 +89,23 @@ export type LSContext = {
   rawPublicodesRules: RawPublicodes;
   ruleToFileNameMap: Map<DottedName, FilePath>;
 };
+
+/**
+ * Get the position of a rule definition in a file.
+ *
+ * @returns The position of the rule definition or undefined if not found.
+ */
+export function getRuleDef(
+  ctx: LSContext,
+  ruleName: string,
+): RuleDef | undefined {
+  const fileName = ctx.ruleToFileNameMap.get(ruleName);
+  if (!fileName) {
+    ctx.connection.console.error(`[getRuleDefPos] file not found: ${ruleName}`);
+    return;
+  }
+
+  return ctx.fileInfos
+    .get(fileName)
+    ?.ruleDefs.find((rule) => rule.dottedName === ruleName);
+}
