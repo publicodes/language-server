@@ -95,7 +95,6 @@ La règle '${dottedName}' est déjà définie dans le fichier : '${ruleFilePath}
   }
 
   ctx.fileInfos.set(filePath, {
-    // NOTE: not needed for now (we use the parsedRules from the engine)
     ruleDefs,
     rawRules,
     tsTree,

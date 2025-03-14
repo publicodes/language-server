@@ -1,5 +1,5 @@
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { FilePath, LSContext } from "./context";
+import { FilePath, getRuleDef, LSContext } from "./context";
 import Engine from "publicodes";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node.js";
 import { parseDocument } from "./parseRules";
@@ -10,6 +10,7 @@ import { getRefInRule } from "./treeSitter";
 
 export const PublicodesDiagnosticCode = {
   UNKNOWN_REF: "unknown_reference",
+  UNKNOWN_PARENT: "unknown_parent",
 };
 
 export default async function validate(
@@ -21,6 +22,7 @@ export default async function validate(
 
   if (document) {
     const docFilePath = fileURLToPath(document.uri);
+
     parseDocument(ctx, docFilePath, document);
   }
 
@@ -168,6 +170,35 @@ function getDiagnosticFromErrorMsg(
             data: {
               ruleName: wrongRule,
               refName,
+            },
+          },
+        };
+      }
+    }
+  }
+
+  if (message.includes(`✖️  La règle parente "`)) {
+    const parentRule = message.match(
+      /✖️  La règle parente "(.*)" n'existe pas/,
+    )?.[1];
+
+    if (parentRule) {
+      const ruleDef = getRuleDef(ctx, wrongRule);
+
+      if (ruleDef) {
+        return {
+          filePath,
+          diagnostic: {
+            severity,
+            range: positionToRange(ruleDef.namesPos),
+            message: `La règle parente "${parentRule}" est introuvable.
+
+[ Solution ]
+- Vérifiez que la règle parente "${parentRule}" est bien écrite.`,
+            code: PublicodesDiagnosticCode.UNKNOWN_PARENT,
+            data: {
+              ruleName: wrongRule,
+              parentRule,
             },
           },
         };

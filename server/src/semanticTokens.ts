@@ -333,7 +333,7 @@ function collectTokens(
             SemanticTokenTypes.operator,
           );
         } else {
-          ctx.connection.console.log(`Unknown node type: ${node.type}`);
+          // ctx.connection.console.log(`Unknown node type: ${node.type}`);
         }
       }
     }
