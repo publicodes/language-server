@@ -7,7 +7,10 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { Logger } from "publicodes";
 import { mapAppend, positionToRange } from "./helpers";
 import { getRefInRule } from "./treeSitter";
-import { getModelFromSource } from "@publicodes/tools/compilation";
+
+export const PublicodesDiagnosticCode = {
+  UNKNOWN_REF: "unknown_reference",
+};
 
 export default async function validate(
   ctx: LSContext,
@@ -152,6 +155,8 @@ function getDiagnosticFromErrorMsg(
           diagnostic: {
             severity,
             range: positionToRange({
+              // FIXME: when the refNode is the first ref, the leading spaces
+              // are included in the start position.
               start: refNode.startPosition,
               end: refNode.endPosition,
             }),
@@ -159,6 +164,11 @@ function getDiagnosticFromErrorMsg(
 
 [ Solution ]
 - Vérifiez que la référence "${refName}" est bien écrite.`,
+            code: PublicodesDiagnosticCode.UNKNOWN_REF,
+            data: {
+              ruleName: wrongRule,
+              refName,
+            },
           },
         };
       }

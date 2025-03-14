@@ -6,6 +6,7 @@ import {
 import { GlobalConfig } from "./context";
 import { tokenModifiers, tokenTypes } from "./semanticTokens";
 import { PUBLICODES_FILE_EXTENSIONS } from "./parseRules";
+import { PublicodesCommands } from "./codeAction";
 
 export default function initialize(params: InitializeParams): {
   config: GlobalConfig;
@@ -31,6 +32,12 @@ export default function initialize(params: InitializeParams): {
     // Defines the capabilities provided by the server
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Full,
+
+      codeActionProvider: true,
+
+      executeCommandProvider: {
+        commands: [PublicodesCommands.CREATE_RULE],
+      },
 
       // Tell the client that this server supports code completion.
       completionProvider: {

@@ -128,6 +128,22 @@ export function activate(context: ExtensionContext) {
     ),
   );
 
+  context.subscriptions.push(
+    languages.registerCodeActionsProvider(
+      { scheme: "file", language: "publicodes" },
+      {
+        provideCodeActions(document, range, context, token) {
+          const params = {
+            textDocument: { uri: document.uri.toString() },
+            range,
+            context,
+          };
+          return client.sendRequest("textDocument/codeAction", params, token);
+        },
+      },
+    ),
+  );
+
   // Start the client. This will also launch the server
   client.start();
 }

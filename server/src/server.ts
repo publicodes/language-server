@@ -19,7 +19,11 @@ import { semanticTokensFullProvider } from "./semanticTokens";
 import Engine from "publicodes";
 import { fileURLToPath } from "node:url";
 import { deleteFileFromCtx } from "./helpers";
-import { parseDocument } from "./parseRules";
+import {
+  codeActionHandler,
+  createRule,
+  PublicodesCommands,
+} from "./codeAction";
 
 let ctx: LSContext = {
   // Create a connection for the server, using Node's IPC as a transport.
@@ -141,4 +145,21 @@ ctx.connection.workspace.onDidRenameFiles((e) => {
 
     deleteFileFromCtx(ctx, oldUri);
   });
+});
+
+ctx.connection.onCodeAction((params) => codeActionHandler(ctx, params));
+
+ctx.connection.onExecuteCommand((params) => {
+  switch (params.command) {
+    case PublicodesCommands.CREATE_RULE: {
+      if (params.arguments == undefined || params.arguments.length === 0) {
+        ctx.connection.console.error(
+          `[onExecuteCommand] ${PublicodesCommands.CREATE_RULE} missing arguments`,
+        );
+        return;
+      }
+      createRule(ctx, params.arguments[0]);
+      break;
+    }
+  }
 });
