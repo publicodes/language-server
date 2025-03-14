@@ -144,6 +144,24 @@ export function activate(context: ExtensionContext) {
     ),
   );
 
+  context.subscriptions.push(
+    languages.registerDocumentSymbolProvider(
+      { scheme: "file", language: "publicodes" },
+      {
+        provideDocumentSymbols(document, token) {
+          const params = {
+            textDocument: { uri: document.uri.toString() },
+          };
+          return client.sendRequest(
+            "textDocument/documentSymbol",
+            params,
+            token,
+          );
+        },
+      },
+    ),
+  );
+
   // Start the client. This will also launch the server
   client.start();
 }

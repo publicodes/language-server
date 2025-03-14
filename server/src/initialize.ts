@@ -35,6 +35,8 @@ export default function initialize(params: InitializeParams): {
 
       codeActionProvider: true,
 
+      documentSymbolProvider: true,
+
       executeCommandProvider: {
         commands: [PublicodesCommands.CREATE_RULE],
       },

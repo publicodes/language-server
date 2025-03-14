@@ -4,6 +4,7 @@ import {
   ProposedFeatures,
   InitializeParams,
   DeleteFilesParams,
+  SymbolKind,
 } from "vscode-languageserver/node.js";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
@@ -18,7 +19,7 @@ import onHoverHandler from "./onHover";
 import { semanticTokensFullProvider } from "./semanticTokens";
 import Engine from "publicodes";
 import { fileURLToPath } from "node:url";
-import { deleteFileFromCtx } from "./helpers";
+import { deleteFileFromCtx, positionToRange } from "./helpers";
 import {
   codeActionHandler,
   createRule,
@@ -162,4 +163,25 @@ ctx.connection.onExecuteCommand((params) => {
       break;
     }
   }
+});
+
+ctx.connection.onDocumentSymbol((params) => {
+  const uri = params.textDocument.uri;
+  const filePath = fileURLToPath(uri);
+  const fileInfo = ctx.fileInfos.get(filePath);
+  if (fileInfo == undefined) {
+    ctx.connection.console.error(
+      `[onDocumentSymbol] file info not found: ${filePath}`,
+    );
+    return [];
+  }
+
+  return fileInfo.ruleDefs.map(({ dottedName, namesPos, defPos }) => {
+    return {
+      name: dottedName,
+      kind: SymbolKind.Namespace,
+      range: positionToRange(defPos),
+      selectionRange: positionToRange(namesPos),
+    };
+  });
 });
