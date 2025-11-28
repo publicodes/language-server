@@ -1391,10 +1391,10 @@ to-regex-range@^5.0.1:
   dependencies:
     is-number "^7.0.0"
 
-tree-sitter-publicodes@^0.1.5:
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/tree-sitter-publicodes/-/tree-sitter-publicodes-0.1.5.tgz#fa39f6047eee68a03afe7bd2652843d70b18c720"
-  integrity sha512-af9t0TBchRdWevND6GhV3l1PCOUwkhZ+/zpDEEFWkeQ/qQtO0VN8pDs8w8cbfP16p9KArcYv7/3MCHxTu2yGUA==
+tree-sitter-publicodes@^0.1.7:
+  version "0.1.7"
+  resolved "https://registry.yarnpkg.com/tree-sitter-publicodes/-/tree-sitter-publicodes-0.1.7.tgz#bb0439c39f76d6077403c729b2a54d5ba4c1e785"
+  integrity sha512-khW9YUk1jO4UFFxzo1cXEWGnP55wX/SP/MMjf7jk/lZYhR3lMZim4ccq1G2IfiDnrwcm2V/XgFZPE9qqSU4hDw==
   dependencies:
     node-addon-api "^8.1.0"
     node-gyp-build "^4.8.1"
