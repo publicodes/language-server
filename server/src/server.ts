@@ -8,7 +8,12 @@ import {
 } from "vscode-languageserver/node.js";
 import { TextDocument } from "vscode-languageserver-textdocument";
 
-import { LSContext, defaultDirsToIgnore, defaultDocSettings } from "./context";
+import {
+  LSContext,
+  defaultDirsToIgnore,
+  defaultDocSettings,
+  ensureModelForFile,
+} from "./context";
 import initialize from "./initialize";
 import initializedHandler from "./initialized";
 import { completionHandler, completionResolveHandler } from "./completion";
@@ -17,7 +22,6 @@ import validate from "./validate";
 import onDefinitionHandler from "./onDefinition";
 import onHoverHandler from "./onHover";
 import { semanticTokensFullProvider } from "./semanticTokens";
-import Engine from "publicodes";
 import { fileURLToPath } from "node:url";
 import { deleteFileFromCtx, positionToRange } from "./helpers";
 import {
@@ -43,14 +47,13 @@ let ctx: LSContext = {
     hasWorkspaceFolderCapability: false,
     hasDiagnosticRelatedInformationCapability: false,
   },
-  engine: new Engine({}),
+  fileToModel: new Map(),
   fileInfos: new Map(),
   diagnostics: new Map(),
-  ruleToFileNameMap: new Map(),
   diagnosticsURI: new Set(),
-  rawPublicodesRules: {},
-  parsedRules: {},
   dirsToIgnore: defaultDirsToIgnore,
+  models: new Map(),
+  workspaceFolders: [],
 };
 
 ctx.connection.onInitialize((params: InitializeParams) => {
@@ -126,9 +129,17 @@ ctx.connection.workspace.onDidRenameFiles((e) => {
       return;
     }
 
+    const diagnostics = ctx.diagnostics.get(oldFilePath);
+
+    deleteFileFromCtx(ctx, oldUri);
+
     ctx.fileInfos.set(newFilePath, fileInfo);
 
-    const diagnostics = ctx.diagnostics.get(oldFilePath);
+    const model = ensureModelForFile(ctx, newFilePath);
+    fileInfo.ruleDefs.forEach(({ dottedName }) =>
+      model.ruleToFileNameMap.set(dottedName, newFilePath),
+    );
+
     if (diagnostics != undefined) {
       ctx.diagnostics.set(newFilePath, diagnostics);
       ctx.diagnosticsURI.add(newUri);
@@ -137,15 +148,9 @@ ctx.connection.workspace.onDidRenameFiles((e) => {
         diagnostics,
       });
     }
-
-    ctx.ruleToFileNameMap.forEach((filePath, rule) => {
-      if (filePath === oldFilePath) {
-        ctx.ruleToFileNameMap.set(rule, newFilePath);
-      }
-    });
-
-    deleteFileFromCtx(ctx, oldUri);
   });
+
+  validate(ctx);
 });
 
 ctx.connection.onCodeAction((params) => codeActionHandler(ctx, params));

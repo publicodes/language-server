@@ -1,5 +1,5 @@
 import { HandlerResult, Hover, HoverParams } from "vscode-languageserver";
-import { LSContext } from "./context";
+import { LSContext, getModelFromFile } from "./context";
 import { getFullRefName } from "./treeSitter";
 import { fileURLToPath } from "url";
 import { serializeEvaluation } from "publicodes";
@@ -32,14 +32,19 @@ export default function (ctx: LSContext) {
     switch (node.type) {
       case "name": {
         try {
+          const model = getModelFromFile(ctx, fileURLToPath(textDocument.uri));
+          if (!model) {
+            return;
+          }
+
           const fullRefName = getFullRefName(
             ctx,
             fileURLToPath(textDocument.uri),
             node,
           );
 
-          const rawRule = ctx.rawPublicodesRules[fullRefName];
-          const nodeValue = ctx.engine.evaluate(fullRefName);
+          const rawRule = model.rawPublicodesRules[fullRefName];
+          const nodeValue = model.engine.evaluate(fullRefName);
 
           // TODO: polish the hover message
           const value = `**${rawRule?.titre ?? fullRefName}** (${serializeEvaluation(nodeValue)})

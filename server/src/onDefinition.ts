@@ -4,7 +4,7 @@ import {
   HandlerResult,
   LocationLink,
 } from "vscode-languageserver";
-import { LSContext } from "./context";
+import { LSContext, getRuleFilePath } from "./context";
 import { getFullRefName } from "./treeSitter";
 import { fileURLToPath, pathToFileURL } from "url";
 
@@ -47,7 +47,11 @@ export default function (ctx: LSContext) {
         fileURLToPath(textDocument.uri),
         node,
       );
-      const filePath = ctx.ruleToFileNameMap.get(fullRefName);
+      const filePath = getRuleFilePath(
+        ctx,
+        fullRefName,
+        fileURLToPath(textDocument.uri),
+      );
       if (filePath == undefined) {
         return [];
       }

@@ -7,7 +7,7 @@ import {
   MarkupKind,
   ServerRequestHandler,
 } from "vscode-languageserver/node.js";
-import { DottedName, LSContext } from "./context";
+import { DottedName, LSContext, getModelFromFile } from "./context";
 import { RuleNode } from "publicodes";
 import { mechanisms } from "./completion-items/mechanisms";
 import { keywords } from "./completion-items/keywords";
@@ -92,8 +92,9 @@ export function completionHandler(
       return keywordsAndMechanismsCompletionItems;
     }
 
+    const model = getModelFromFile(ctx, filePath);
     const completionItems = getRuleCompletionItems(
-      ctx,
+      model?.parsedRules ?? {},
       refNodeAtCursorPosition,
       params.context?.triggerKind ?? CompletionTriggerKind.Invoked,
       fullRefName,
@@ -130,7 +131,7 @@ export function completionResolveHandler(_ctx: LSContext) {
  * @param currentRefNode The current node currenlty in completion which allows to filter only corresponding childs rules
  */
 const getRuleCompletionItems = (
-  ctx: LSContext,
+  parsedRules: Record<string, RuleNode>,
   currentRefNode: TSParser.SyntaxNode,
   triggerKind: CompletionTriggerKind,
   currRuleName: DottedName | undefined,
@@ -211,7 +212,7 @@ const getRuleCompletionItems = (
     return hasCommonNamespace;
   };
 
-  return Object.entries(ctx.parsedRules)
+  return Object.entries(parsedRules)
     .filter(([dottedName, _]) => {
       const splittedDottedName = dottedName.split(" . ");
 
