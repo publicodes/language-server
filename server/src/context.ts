@@ -1,3 +1,5 @@
+import { existsSync } from "fs";
+import path, { dirname, join, normalize } from "path";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import {
   Connection,
@@ -38,6 +40,15 @@ export type DottedName = string;
 
 // TODO: use the publicodes types
 export type RawPublicodes = Record<DottedName, any>;
+
+export type Model = {
+  root: FilePath;
+  ruleToFileNameMap: Map<DottedName, FilePath>;
+  rawPublicodesRules: RawPublicodes;
+  parsedRules: Record<string, any>;
+  engine: Engine<string>;
+  files: Set<FilePath>;
+};
 
 export type FileInfos = {
   // List of rules in the file extracted from the tree-sitter's CST
@@ -82,12 +93,11 @@ export type LSContext = {
   diagnosticsURI: Set<URI>;
   documentSettings: Map<string, Thenable<DocumentSettings>>;
   documents: TextDocuments<TextDocument>;
-  engine: Engine<string>;
+  fileToModel: Map<FilePath, FilePath>;
   fileInfos: Map<FilePath, FileInfos>;
   globalSettings: DocumentSettings;
-  parsedRules: Record<string, any>;
-  rawPublicodesRules: RawPublicodes;
-  ruleToFileNameMap: Map<DottedName, FilePath>;
+  models: Map<FilePath, Model>;
+  workspaceFolders: FilePath[];
 };
 
 /**
@@ -98,14 +108,188 @@ export type LSContext = {
 export function getRuleDef(
   ctx: LSContext,
   ruleName: string,
+  fromFilePath?: FilePath,
 ): RuleDef | undefined {
-  const fileName = ctx.ruleToFileNameMap.get(ruleName);
+  const fileName = getRuleFilePath(ctx, ruleName, fromFilePath);
   if (!fileName) {
-    ctx.connection.console.error(`[getRuleDefPos] file not found: ${ruleName}`);
+    ctx.connection.console.error(
+      `[getRuleDefPos] file not found: ${ruleName}`,
+    );
     return;
   }
 
   return ctx.fileInfos
     .get(fileName)
     ?.ruleDefs.find((rule) => rule.dottedName === ruleName);
+}
+
+export const PUBLICODES_CONFIG_FILES = [
+  ".publicodes.config.ts",
+  ".publicodes.config.js",
+];
+
+function findWorkspaceFolder(
+  ctx: LSContext,
+  filePath: FilePath,
+): FilePath | undefined {
+  const normalizedFile = normalize(filePath);
+
+  const matchingFolders = ctx.workspaceFolders.filter((folder) => {
+    const normalizedFolder = normalize(folder);
+
+    return (
+      normalizedFile === normalizedFolder ||
+      normalizedFile.startsWith(`${normalizedFolder}${path.sep}`)
+    );
+  });
+
+  return matchingFolders.sort((a, b) => b.length - a.length)[0];
+}
+
+export function findModelRoot(ctx: LSContext, filePath: FilePath): FilePath {
+  const workspaceRoot =
+    findWorkspaceFolder(ctx, filePath) ?? dirname(normalize(filePath));
+
+  let currentDir = dirname(normalize(filePath));
+
+  while (true) {
+    if (
+      PUBLICODES_CONFIG_FILES.some((configFile) =>
+        existsSync(join(currentDir, configFile)),
+      )
+    ) {
+      return currentDir;
+    }
+
+    if (existsSync(join(currentDir, "package.json"))) {
+      return currentDir;
+    }
+
+    if (currentDir === workspaceRoot) {
+      break;
+    }
+
+    const parent = dirname(currentDir);
+    if (parent === currentDir) {
+      break;
+    }
+    currentDir = parent;
+  }
+
+  return workspaceRoot;
+}
+
+export function getModelFromFile(
+  ctx: LSContext,
+  filePath: FilePath,
+): Model | undefined {
+  const modelRoot = ctx.fileToModel.get(filePath);
+
+  if (modelRoot == undefined) {
+    return undefined;
+  }
+
+  return ctx.models.get(modelRoot);
+}
+
+export function ensureModelForFile(
+  ctx: LSContext,
+  filePath: FilePath,
+): Model {
+  const modelRoot = findModelRoot(ctx, filePath);
+  const currentModelRoot = ctx.fileToModel.get(filePath);
+
+  if (currentModelRoot && currentModelRoot !== modelRoot) {
+    const currentModel = ctx.models.get(currentModelRoot);
+    currentModel?.files.delete(filePath);
+    currentModel?.ruleToFileNameMap.forEach((path, rule) => {
+      if (path === filePath) {
+        currentModel.ruleToFileNameMap.delete(rule);
+      }
+    });
+  }
+
+  let model = ctx.models.get(modelRoot);
+
+  if (model == undefined) {
+    model = {
+      root: modelRoot,
+      ruleToFileNameMap: new Map(),
+      rawPublicodesRules: {},
+      parsedRules: {},
+      engine: new Engine({}),
+      files: new Set(),
+    };
+    ctx.models.set(modelRoot, model);
+  }
+
+  model.files.add(filePath);
+  ctx.fileToModel.set(filePath, modelRoot);
+
+  return model;
+}
+
+export function clearRuleIndexForFile(ctx: LSContext, filePath: FilePath) {
+  const model = getModelFromFile(ctx, filePath);
+
+  if (model == undefined) {
+    return;
+  }
+
+  model.ruleToFileNameMap.forEach((path, rule) => {
+    if (path === filePath) {
+      model.ruleToFileNameMap.delete(rule);
+    }
+  });
+}
+
+export function removeFileFromModel(ctx: LSContext, filePath: FilePath) {
+  const modelRoot = ctx.fileToModel.get(filePath);
+  if (modelRoot == undefined) {
+    return;
+  }
+
+  const model = ctx.models.get(modelRoot);
+  if (model == undefined) {
+    return;
+  }
+
+  clearRuleIndexForFile(ctx, filePath);
+  model.files.delete(filePath);
+  ctx.fileToModel.delete(filePath);
+
+  if (model.files.size === 0) {
+    ctx.models.delete(modelRoot);
+  }
+}
+
+export function getRuleFilePath(
+  ctx: LSContext,
+  ruleName: string,
+  fromFilePath?: FilePath,
+): FilePath | undefined {
+  const model =
+    fromFilePath != undefined ? getModelFromFile(ctx, fromFilePath) : undefined;
+
+  if (model) {
+    return model.ruleToFileNameMap.get(ruleName);
+  }
+
+  let foundFile: FilePath | undefined = undefined;
+
+  ctx.models.forEach((model) => {
+    const file = model.ruleToFileNameMap.get(ruleName);
+
+    if (!file) {
+      return;
+    }
+
+    if (foundFile && file !== foundFile) {
+      foundFile = undefined;
+      return;
+    }
+    foundFile = file;
+  });
+
+  return foundFile;
 }

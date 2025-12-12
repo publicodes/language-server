@@ -1,6 +1,5 @@
-import TSParser from "tree-sitter";
 import { Range, URI } from "vscode-languageserver";
-import { LSContext, Position } from "./context";
+import { LSContext, Position, removeFileFromModel } from "./context";
 import { fileURLToPath } from "node:url";
 
 /**
@@ -43,11 +42,7 @@ export function deleteFileFromCtx(ctx: LSContext, uri: URI) {
 
   ctx.fileInfos.delete(path);
 
-  ctx.ruleToFileNameMap.forEach((path, rule) => {
-    if (path === fileURLToPath(uri)) {
-      ctx.ruleToFileNameMap.delete(rule);
-    }
-  });
+  removeFileFromModel(ctx, path);
 
   if (ctx.diagnostics.has(path)) {
     ctx.diagnostics.delete(path);
