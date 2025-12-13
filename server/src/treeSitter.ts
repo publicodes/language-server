@@ -1,6 +1,6 @@
 import TSParser, { SyntaxNode } from "tree-sitter";
 import Publicodes from "tree-sitter-publicodes";
-import { DottedName, LSContext } from "./context";
+import { DottedName, LSContext, getModelFromFile } from "./context";
 import { utils } from "publicodes";
 import assert from "assert";
 import { trimQuotedString } from "./helpers";
@@ -66,8 +66,10 @@ export function getFullRefName(
     );
   }
 
+  const parsedRules = getModelFromFile(ctx, filePath)?.parsedRules ?? {};
+
   return utils.disambiguateReference(
-    ctx.parsedRules,
+    parsedRules,
     ruleDottedName,
     trimQuotedString(ruleNames.reverse().join(" . ")),
   );

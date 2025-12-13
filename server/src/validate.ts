@@ -1,5 +1,11 @@
 import { TextDocument } from "vscode-languageserver-textdocument";
-import { FilePath, getRuleDef, LSContext } from "./context";
+import {
+  FilePath,
+  LSContext,
+  ensureModelForFile,
+  getRuleDef,
+  getRuleFilePath,
+} from "./context";
 import Engine from "publicodes";
 import { Diagnostic, DiagnosticSeverity } from "vscode-languageserver/node.js";
 import { parseDocument } from "./parseRules";
@@ -18,7 +24,7 @@ export default async function validate(
   document?: TextDocument,
 ): Promise<void> {
   ctx.diagnostics = new Map();
-  let startTimer = Date.now();
+  const startTimer = Date.now();
 
   if (document) {
     const docFilePath = fileURLToPath(document.uri);
@@ -26,49 +32,62 @@ export default async function validate(
     parseDocument(ctx, docFilePath, document);
   }
 
-  try {
-    // Merge all raw rules (from all files) into one object
-    // NOTE: a better way could be found?
-    ctx.rawPublicodesRules = {};
-    ctx.fileInfos.forEach((fileInfo) => {
-      ctx.rawPublicodesRules = {
-        ...ctx.rawPublicodesRules,
-        ...fileInfo.rawRules,
-      };
-    });
+  ctx.fileInfos.forEach((_fileInfo, filePath) => {
+    ensureModelForFile(ctx, filePath);
+  });
 
-    ctx.engine = new Engine(ctx.rawPublicodesRules, {
-      logger: getDiagnosticsLogger(ctx),
-    });
-    ctx.connection.console.log(
-      `[validate] Engine created in ${Date.now() - startTimer}ms.`,
-    );
-    ctx.parsedRules = ctx.engine.getParsedRules();
+  ctx.models.forEach((model) => {
+    model.rawPublicodesRules = {};
+    model.parsedRules = {};
+    model.ruleToFileNameMap.clear();
+  });
 
-    startTimer = Date.now();
-    // Evaluates all the rules to get unit warning
-    // PERF: this took ~1500ms for 2009 rules, this needs to be optimized
-    Object.keys(ctx.parsedRules).forEach((rule) => {
-      ctx.engine.evaluate(rule);
+  ctx.fileInfos.forEach((fileInfo, filePath) => {
+    const model = ensureModelForFile(ctx, filePath);
+    fileInfo.ruleDefs.forEach(({ dottedName }) => {
+      model.ruleToFileNameMap.set(dottedName, filePath);
     });
-    ctx.connection.console.log(
-      `[validate] Rules evaluated in ${Date.now() - startTimer}ms (${Object.keys(ctx.parsedRules).length} rules).`,
-    );
+    model.rawPublicodesRules = {
+      ...model.rawPublicodesRules,
+      ...fileInfo.rawRules,
+    };
+  });
 
-    // Remove previous diagnostics
-    ctx.diagnosticsURI.forEach((uri) => {
-      ctx.connection.sendDiagnostics({ uri, diagnostics: [] });
-      ctx.diagnosticsURI = new Set();
-    });
-  } catch (e: any) {
-    if (e instanceof Error) {
-      const { filePath, diagnostic } = getDiagnosticFromErrorMsg(
-        ctx,
-        e.message,
+  ctx.diagnosticsURI.forEach((uri) => {
+    ctx.connection.sendDiagnostics({ uri, diagnostics: [] });
+  });
+  ctx.diagnosticsURI = new Set();
+
+  ctx.models.forEach((model) => {
+    const engineStart = Date.now();
+    try {
+      model.engine = new Engine(model.rawPublicodesRules, {
+        logger: getDiagnosticsLogger(ctx, model.root),
+      });
+      ctx.connection.console.log(
+        `[validate] Engine created for ${model.root} in ${Date.now() - engineStart}ms.`,
       );
-      mapAppend(ctx.diagnostics, filePath, diagnostic);
+
+      model.parsedRules = model.engine.getParsedRules();
+
+      const evalStart = Date.now();
+      Object.keys(model.parsedRules).forEach((rule) => {
+        model.engine.evaluate(rule);
+      });
+      ctx.connection.console.log(
+        `[validate] Rules evaluated for ${model.root} in ${Date.now() - evalStart}ms (${Object.keys(model.parsedRules).length} rules).`,
+      );
+    } catch (e: any) {
+      if (e instanceof Error) {
+        const { filePath, diagnostic } = getDiagnosticFromErrorMsg(
+          ctx,
+          model.root,
+          e.message,
+        );
+        mapAppend(ctx.diagnostics, filePath, diagnostic);
+      }
     }
-  }
+  });
 
   ctx.connection.console.log(
     `[validate] Found ${ctx.diagnostics.size} diagnostics in ${Date.now() - startTimer}ms.`,
@@ -89,7 +108,7 @@ function sendDiagnostics(ctx: LSContext) {
   });
 }
 
-function getDiagnosticsLogger(ctx: LSContext): Logger {
+function getDiagnosticsLogger(ctx: LSContext, modelRoot: FilePath): Logger {
   return {
     log(msg: string) {
       ctx.connection.console.log(`[publicodes:log] ${msg}`);
@@ -97,13 +116,18 @@ function getDiagnosticsLogger(ctx: LSContext): Logger {
     warn(msg: string) {
       const { filePath, diagnostic } = getDiagnosticFromErrorMsg(
         ctx,
+        modelRoot,
         msg,
         DiagnosticSeverity.Warning,
       );
       mapAppend(ctx.diagnostics, filePath, diagnostic);
     },
     error(msg: string) {
-      const { filePath, diagnostic } = getDiagnosticFromErrorMsg(ctx, msg);
+      const { filePath, diagnostic } = getDiagnosticFromErrorMsg(
+        ctx,
+        modelRoot,
+        msg,
+      );
       mapAppend(ctx.diagnostics, filePath, diagnostic);
     },
   };
@@ -111,6 +135,7 @@ function getDiagnosticsLogger(ctx: LSContext): Logger {
 
 function getDiagnosticFromErrorMsg(
   ctx: LSContext,
+  modelRoot: FilePath,
   message: string,
   severity: DiagnosticSeverity = DiagnosticSeverity.Error,
 ): { filePath: FilePath | undefined; diagnostic: Diagnostic } {
@@ -128,7 +153,13 @@ function getDiagnosticFromErrorMsg(
       },
     };
   }
-  const filePath = ctx.ruleToFileNameMap.get(wrongRule);
+
+  const model = ctx.models.get(modelRoot);
+  const filePath =
+    model?.ruleToFileNameMap.get(wrongRule) ??
+    getRuleFilePath(ctx, wrongRule) ??
+    findRuleFilePathFallback(ctx, wrongRule);
+
   if (!filePath) {
     return {
       filePath: undefined,
@@ -143,9 +174,9 @@ function getDiagnosticFromErrorMsg(
     };
   }
 
-  if (message.includes(`✖️  La référence "`)) {
+  if (message.includes(`ƒo-‹÷?  La rÇ¸fÇ¸rence "`)) {
     const refName = message.match(
-      /✖️  La référence "(.*)" est introuvable/,
+      /ƒo-‹÷?  La rÇ¸fÇ¸rence "(.*)" est introuvable/,
     )?.[1];
 
     if (refName) {
@@ -162,10 +193,10 @@ function getDiagnosticFromErrorMsg(
               start: refNode.startPosition,
               end: refNode.endPosition,
             }),
-            message: `La référence "${refName}" est introuvable.
+            message: `La rÇ¸fÇ¸rence "${refName}" est introuvable.
 
 [ Solution ]
-- Vérifiez que la référence "${refName}" est bien écrite.`,
+- VÇ¸rifiez que la rÇ¸fÇ¸rence "${refName}" est bien Ç¸crite.`,
             code: PublicodesDiagnosticCode.UNKNOWN_REF,
             data: {
               ruleName: wrongRule,
@@ -177,13 +208,13 @@ function getDiagnosticFromErrorMsg(
     }
   }
 
-  if (message.includes(`✖️  La règle parente "`)) {
+  if (message.includes(`ƒo-‹÷?  La rÇùgle parente "`)) {
     const parentRule = message.match(
-      /✖️  La règle parente "(.*)" n'existe pas/,
+      /ƒo-‹÷?  La rÇùgle parente "(.*)" n'existe pas/,
     )?.[1];
 
     if (parentRule) {
-      const ruleDef = getRuleDef(ctx, wrongRule);
+      const ruleDef = getRuleDef(ctx, wrongRule, filePath);
 
       if (ruleDef) {
         return {
@@ -191,10 +222,10 @@ function getDiagnosticFromErrorMsg(
           diagnostic: {
             severity,
             range: positionToRange(ruleDef.namesPos),
-            message: `La règle parente "${parentRule}" est introuvable.
+            message: `La rÇùgle parente "${parentRule}" est introuvable.
 
 [ Solution ]
-- Vérifiez que la règle parente "${parentRule}" est bien écrite.`,
+- VÇ¸rifiez que la rÇùgle parente "${parentRule}" est bien Ç¸crite.`,
             code: PublicodesDiagnosticCode.UNKNOWN_PARENT,
             data: {
               ruleName: wrongRule,
@@ -224,9 +255,18 @@ function getDiagnosticFromErrorMsg(
 }
 
 function getPublicodeRuleNameFromErrorMsg(msg: string) {
-  const match = msg.match(/➡️  Dans la règle "([^\n\r]*)"/);
+  const match = msg.match(/ƒz­‹÷?  Dans la rÇùgle "([^\n\r]*)"/);
   if (match == null) {
     return undefined;
   }
   return match[1];
+}
+
+function findRuleFilePathFallback(ctx: LSContext, ruleName: string) {
+  for (const [filePath, fileInfo] of ctx.fileInfos.entries()) {
+    if (fileInfo.ruleDefs.some((r) => r.dottedName === ruleName)) {
+      return filePath;
+    }
+  }
+  return undefined;
 }

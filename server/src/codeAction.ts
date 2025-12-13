@@ -97,7 +97,7 @@ export function createRule(
   ctx: LSContext,
   { uri, ruleName, ruleNameToCreate, position }: CreateRuleParams,
 ) {
-  const ruleDefPos = getRuleDef(ctx, ruleName)?.defPos;
+  const ruleDefPos = getRuleDef(ctx, ruleName, fileURLToPath(uri))?.defPos;
 
   if (!ruleDefPos) {
     ctx.connection.console.error(

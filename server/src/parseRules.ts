@@ -12,6 +12,8 @@ import {
   LSContext,
   RawPublicodes,
   RuleDef,
+  clearRuleIndexForFile,
+  ensureModelForFile,
 } from "./context";
 import { getTSTree } from "./treeSitter";
 import { mapAppend, positionToRange, trimQuotedString } from "./helpers";
@@ -58,13 +60,16 @@ export function parseDocument(
   filePath: FilePath,
   document?: TextDocument,
 ) {
+  const model = ensureModelForFile(ctx, filePath);
+  clearRuleIndexForFile(ctx, filePath);
+
   const fileContent = document?.getText() ?? readFileSync(filePath).toString();
   const tsTree = getTSTree(fileContent);
   const { rawRules, errors } = parseRawRules(filePath);
   const { definitions, importNamespace } = collectRuleDefs(tsTree.rootNode);
 
   const ruleDefs = definitions.filter(({ dottedName, namesPos }) => {
-    const ruleFilePath = ctx.ruleToFileNameMap.get(dottedName);
+    const ruleFilePath = model.ruleToFileNameMap.get(dottedName);
 
     // Check if the rule is already defined in another file
     // TODO: add a test case for this
@@ -88,7 +93,7 @@ La règle '${dottedName}' est déjà définie dans le fichier : '${ruleFilePath}
   // Checks if the namespace is not already defined in another file
   // TODO: add a warning if the namespace is already defined in another file
   if (importNamespace) {
-    const ruleFilePath = ctx.ruleToFileNameMap.get(importNamespace);
+    const ruleFilePath = model.ruleToFileNameMap.get(importNamespace);
     if (ruleFilePath && ruleFilePath !== filePath) {
       delete rawRules[importNamespace];
     }
@@ -102,7 +107,7 @@ La règle '${dottedName}' est déjà définie dans le fichier : '${ruleFilePath}
   });
 
   ruleDefs.forEach(({ dottedName }) => {
-    ctx.ruleToFileNameMap.set(dottedName, filePath);
+    model.ruleToFileNameMap.set(dottedName, filePath);
   });
 
   if (errors.length > 0) {

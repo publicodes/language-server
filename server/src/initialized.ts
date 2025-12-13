@@ -2,7 +2,7 @@ import { DidChangeConfigurationNotification } from "vscode-languageserver/node.j
 import { LSContext } from "./context";
 import { parseDir } from "./parseRules";
 import validate from "./validate";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 export default function intializedHandler(ctx: LSContext) {
   return () => {
@@ -17,6 +17,9 @@ export default function intializedHandler(ctx: LSContext) {
     if (ctx.config.hasWorkspaceFolderCapability) {
       ctx.connection.workspace.getWorkspaceFolders().then((folders) => {
         if (folders) {
+          ctx.workspaceFolders = folders.map((folder) =>
+            fileURLToPath(folder.uri),
+          );
           folders.forEach((folder) => {
             parseDir(ctx, folder.uri);
           });
