@@ -157,7 +157,8 @@ function getDiagnosticFromErrorMsg(
   const model = ctx.models.get(modelRoot);
   const filePath =
     model?.ruleToFileNameMap.get(wrongRule) ??
-    getRuleFilePath(ctx, wrongRule);
+    getRuleFilePath(ctx, wrongRule) ??
+    findRuleFilePathFallback(ctx, wrongRule);
 
   if (!filePath) {
     return {
@@ -259,4 +260,13 @@ function getPublicodeRuleNameFromErrorMsg(msg: string) {
     return undefined;
   }
   return match[1];
+}
+
+function findRuleFilePathFallback(ctx: LSContext, ruleName: string) {
+  for (const [filePath, fileInfo] of ctx.fileInfos.entries()) {
+    if (fileInfo.ruleDefs.some((r) => r.dottedName === ruleName)) {
+      return filePath;
+    }
+  }
+  return undefined;
 }

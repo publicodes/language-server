@@ -181,12 +181,14 @@ ctx.connection.onDocumentSymbol((params) => {
     return [];
   }
 
-  return fileInfo.ruleDefs.map(({ dottedName, namesPos, defPos }) => {
-    return {
-      name: dottedName,
-      kind: SymbolKind.Namespace,
-      range: positionToRange(defPos),
-      selectionRange: positionToRange(namesPos),
-    };
-  });
+  return fileInfo.ruleDefs
+    .filter((r) => r.defPos != undefined && r.namesPos != undefined)
+    .map(({ dottedName, namesPos, defPos }) => {
+      return {
+        name: dottedName,
+        kind: SymbolKind.Namespace,
+        range: positionToRange(defPos),
+        selectionRange: positionToRange(namesPos),
+      };
+    });
 });
